@@ -22,6 +22,12 @@ const DEFAULT_INITIAL_DATA = {
       venue: 'The Grand Pavilion Ballroom, Mayfair, London',
       currency: '£',
       catwalkAppearances: 4,
+      appearanceThemes: {
+        1: 'Denim',
+        2: 'Leisureware',
+        3: 'Draped Eveningwear',
+        4: 'Grand Finale'
+      },
       models: [
         { id: 'm1', firstName: 'Elena', walkOrder: 1, notes: 'Show Opener. Wears sleek updos for appearances 1-2.' },
         { id: 'm2', firstName: 'Sophia', walkOrder: 2, notes: 'Requires quick shoe swap between Appearance 2 and 3.' },
@@ -85,6 +91,11 @@ const DEFAULT_INITIAL_DATA = {
       venue: 'Royal Horticultural Halls, Westminster, London',
       currency: '£',
       catwalkAppearances: 3,
+      appearanceThemes: {
+        1: 'Heavy Wool Tailoring',
+        2: 'Leather & Cashmere',
+        3: 'Gala Evening Noir'
+      },
       models: [
         { id: 'm1_aw', firstName: 'Freja', walkOrder: 1, notes: 'Heavy wool look opener' },
         { id: 'm2_aw', firstName: 'Aria', walkOrder: 2, notes: 'Leather boots change' },
@@ -128,9 +139,46 @@ class FashionShowDatabase {
         venue TEXT,
         currency TEXT DEFAULT '£',
         catwalk_appearances INTEGER DEFAULT 3,
+        appearance_themes TEXT,
         created_at TEXT
       );
     `);
+
+    // Ensure backwards compatibility for existing databases without appearance_themes column
+    try {
+      this.db.exec('ALTER TABLE shows ADD COLUMN appearance_themes TEXT;');
+    } catch (e) {
+      // Column already exists
+    }
+
+    // Seed default appearance themes for initial shows if empty
+    try {
+      const ssShow = this.db.prepare('SELECT appearance_themes FROM shows WHERE id = ?').get('show_2026_ss');
+      if (ssShow && (!ssShow.appearance_themes || ssShow.appearance_themes === '{}')) {
+        this.db.prepare('UPDATE shows SET appearance_themes = ? WHERE id = ?').run(
+          JSON.stringify({
+            1: 'Denim',
+            2: 'Leisureware',
+            3: 'Draped Eveningwear',
+            4: 'Grand Finale'
+          }),
+          'show_2026_ss'
+        );
+      }
+      const awShow = this.db.prepare('SELECT appearance_themes FROM shows WHERE id = ?').get('show_2026_aw');
+      if (awShow && (!awShow.appearance_themes || awShow.appearance_themes === '{}')) {
+        this.db.prepare('UPDATE shows SET appearance_themes = ? WHERE id = ?').run(
+          JSON.stringify({
+            1: 'Heavy Wool Tailoring',
+            2: 'Leather & Cashmere',
+            3: 'Gala Evening Noir'
+          }),
+          'show_2026_aw'
+        );
+      }
+    } catch (e) {
+      // Ignore
+    }
 
     // 2. Models table
     this.db.exec(`
@@ -227,6 +275,13 @@ class FashionShowDatabase {
         };
       }
 
+      let appearanceThemes = {};
+      try {
+        appearanceThemes = s.appearance_themes ? JSON.parse(s.appearance_themes) : {};
+      } catch (e) {
+        appearanceThemes = {};
+      }
+
       return {
         id: s.id,
         name: s.name,
@@ -236,6 +291,7 @@ class FashionShowDatabase {
         venue: s.venue,
         currency: s.currency,
         catwalkAppearances: s.catwalk_appearances,
+        appearanceThemes,
         models,
         items,
         assignments
@@ -269,8 +325,8 @@ class FashionShowDatabase {
       this.db.exec('DELETE FROM shows;');
 
       const insertShow = this.db.prepare(`
-        INSERT INTO shows (id, name, season, year, date, venue, currency, catwalk_appearances, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO shows (id, name, season, year, date, venue, currency, catwalk_appearances, appearance_themes, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       const insertModel = this.db.prepare(`
@@ -298,6 +354,7 @@ class FashionShowDatabase {
           show.venue || 'Catwalk Hall',
           show.currency || '£',
           parseInt(show.catwalkAppearances, 10) || 3,
+          JSON.stringify(show.appearanceThemes || {}),
           show.createdAt || new Date().toISOString()
         );
 
@@ -388,14 +445,14 @@ class FashionShowDatabase {
     return showId;
   }
 
-  createShow({ id, name, season, year, date, venue, currency = '£', catwalkAppearances = 3 }) {
+  createShow({ id, name, season, year, date, venue, currency = '£', catwalkAppearances = 3, appearanceThemes = {} }) {
     const showId = id || ('show_' + Date.now());
     const appearances = Math.min(5, Math.max(1, parseInt(catwalkAppearances, 10) || 3));
     const showName = name || `${season || 'Fashion'} ${year || new Date().getFullYear()} Show`;
 
     this.db.prepare(`
-      INSERT INTO shows (id, name, season, year, date, venue, currency, catwalk_appearances, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO shows (id, name, season, year, date, venue, currency, catwalk_appearances, appearance_themes, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       showId,
       showName,
@@ -405,6 +462,7 @@ class FashionShowDatabase {
       venue || 'Catwalk Hall',
       currency,
       appearances,
+      JSON.stringify(appearanceThemes || {}),
       new Date().toISOString()
     );
 
@@ -432,6 +490,13 @@ class FashionShowDatabase {
       };
     }
 
+    let appearanceThemes = {};
+    try {
+      appearanceThemes = s.appearance_themes ? JSON.parse(s.appearance_themes) : {};
+    } catch (e) {
+      appearanceThemes = {};
+    }
+
     return {
       id: s.id,
       name: s.name,
@@ -441,6 +506,7 @@ class FashionShowDatabase {
       venue: s.venue,
       currency: s.currency,
       catwalkAppearances: s.catwalk_appearances,
+      appearanceThemes,
       models,
       items,
       assignments
@@ -461,11 +527,21 @@ class FashionShowDatabase {
       ? Math.min(5, Math.max(1, parseInt(updates.catwalkAppearances, 10)))
       : current.catwalk_appearances;
 
+    let appearanceThemes = {};
+    try {
+      appearanceThemes = current.appearance_themes ? JSON.parse(current.appearance_themes) : {};
+    } catch (e) {
+      appearanceThemes = {};
+    }
+    if (updates.appearanceThemes !== undefined && typeof updates.appearanceThemes === 'object' && updates.appearanceThemes !== null) {
+      appearanceThemes = { ...appearanceThemes, ...updates.appearanceThemes };
+    }
+
     this.db.prepare(`
       UPDATE shows
-      SET name = ?, season = ?, year = ?, date = ?, venue = ?, currency = ?, catwalk_appearances = ?
+      SET name = ?, season = ?, year = ?, date = ?, venue = ?, currency = ?, catwalk_appearances = ?, appearance_themes = ?
       WHERE id = ?
-    `).run(name, season, year, date, venue, currency, appearances, showId);
+    `).run(name, season, year, date, venue, currency, appearances, JSON.stringify(appearanceThemes), showId);
 
     return this.getShowById(showId);
   }
@@ -502,8 +578,8 @@ class FashionShowDatabase {
     this.db.exec('BEGIN;');
     try {
       this.db.prepare(`
-        INSERT INTO shows (id, name, season, year, date, venue, currency, catwalk_appearances, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO shows (id, name, season, year, date, venue, currency, catwalk_appearances, appearance_themes, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         copy.id,
         copy.name,
@@ -513,6 +589,7 @@ class FashionShowDatabase {
         copy.venue,
         copy.currency,
         copy.catwalkAppearances,
+        JSON.stringify(copy.appearanceThemes || {}),
         new Date().toISOString()
       );
 
@@ -762,6 +839,22 @@ class FashionShowDatabase {
       jewelleryIds: validJewellery,
       footwearId: validFootwear
     };
+  }
+
+  setAppearanceTheme(showId, appearanceIndex, themeName) {
+    const current = this.db.prepare('SELECT appearance_themes FROM shows WHERE id = ?').get(showId);
+    if (!current) return null;
+    let themes = {};
+    try {
+      themes = current.appearance_themes ? JSON.parse(current.appearance_themes) : {};
+    } catch (e) {
+      themes = {};
+    }
+    const idx = parseInt(appearanceIndex, 10);
+    themes[idx] = (themeName || '').trim();
+    this.db.prepare('UPDATE shows SET appearance_themes = ? WHERE id = ?')
+      .run(JSON.stringify(themes), showId);
+    return themes;
   }
 
   clearAssignment(showId, modelId, appearanceIndex) {

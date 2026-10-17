@@ -19,6 +19,12 @@ const DEFAULT_INITIAL_DATA = {
       venue: 'The Grand Pavilion Ballroom, Mayfair, London',
       currency: '£',
       catwalkAppearances: 4, // 1 to 5 appearances
+      appearanceThemes: {
+        1: 'Denim',
+        2: 'Leisureware',
+        3: 'Draped Eveningwear',
+        4: 'Grand Finale'
+      },
       models: [
         { id: 'm1', firstName: 'Elena', walkOrder: 1, notes: 'Show Opener. Wears sleek updos for appearances 1-2.' },
         { id: 'm2', firstName: 'Sophia', walkOrder: 2, notes: 'Requires quick shoe swap between Appearance 2 and 3.' },
@@ -95,6 +101,11 @@ const DEFAULT_INITIAL_DATA = {
       venue: 'Royal Horticultural Halls, Westminster, London',
       currency: '£',
       catwalkAppearances: 3,
+      appearanceThemes: {
+        1: 'Heavy Wool Tailoring',
+        2: 'Leather & Cashmere',
+        3: 'Gala Evening Noir'
+      },
       models: [
         { id: 'm1_aw', firstName: 'Freja', walkOrder: 1, notes: 'Heavy wool look opener' },
         { id: 'm2_aw', firstName: 'Aria', walkOrder: 2, notes: 'Leather boots change' },
@@ -324,7 +335,7 @@ class FashionShowStore {
     return null;
   }
 
-  createShow({ name, season, year, date, venue, currency = '£', catwalkAppearances = 3 }) {
+  createShow({ name, season, year, date, venue, currency = '£', catwalkAppearances = 3, appearanceThemes = {} }) {
     const id = 'show_' + Date.now();
     const appearances = Math.min(5, Math.max(1, parseInt(catwalkAppearances, 10) || 3));
     const newShow = {
@@ -336,6 +347,7 @@ class FashionShowStore {
       venue: venue || 'Catwalk Hall',
       currency: currency || '£',
       catwalkAppearances: appearances,
+      appearanceThemes: appearanceThemes || {},
       models: [],
       items: [],
       assignments: {}
@@ -360,6 +372,10 @@ class FashionShowStore {
     if (updates.catwalkAppearances !== undefined) {
       const appCount = Math.min(5, Math.max(1, parseInt(updates.catwalkAppearances, 10)));
       show.catwalkAppearances = appCount;
+    }
+
+    if (updates.appearanceThemes !== undefined && typeof updates.appearanceThemes === 'object' && updates.appearanceThemes !== null) {
+      show.appearanceThemes = { ...(show.appearanceThemes || {}), ...updates.appearanceThemes };
     }
 
     this.saveData();
@@ -389,6 +405,31 @@ class FashionShowStore {
     this.data.activeShowId = copy.id;
     this.saveData();
     return copy;
+  }
+
+  getAppearanceTheme(showId, appearanceIndex) {
+    const show = showId ? this.data.shows.find(s => s.id === showId) : this.getActiveShow();
+    if (!show || !show.appearanceThemes) return '';
+    return show.appearanceThemes[appearanceIndex] || show.appearanceThemes[String(appearanceIndex)] || '';
+  }
+
+  setAppearanceTheme(showId, appearanceIndex, themeName) {
+    const show = showId ? this.data.shows.find(s => s.id === showId) : this.getActiveShow();
+    if (!show) return null;
+    if (!show.appearanceThemes) show.appearanceThemes = {};
+    const trimmed = (themeName || '').trim();
+    show.appearanceThemes[appearanceIndex] = trimmed;
+    this.saveData();
+
+    if (this.isSQLite) {
+      fetch(getApiUrl(`/api/shows/${encodeURIComponent(show.id)}/themes/${appearanceIndex}`), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: trimmed })
+      }).catch(err => console.error(err));
+    }
+
+    return trimmed;
   }
 
   // --- Model Management (Up to 5 models per show) ---

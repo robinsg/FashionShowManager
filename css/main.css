@@ -513,6 +513,14 @@ body::before {
   gap: 4px;
 }
 
+.btn-xs {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.3px;
+}
+
 .w-100 {
   width: 100%;
 }
@@ -568,6 +576,139 @@ body::before {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 16px;
+}
+
+/* Theme Inputs */
+.themes-inputs-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.theme-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.theme-index-label {
+  min-width: 115px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.theme-name-input {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.slot-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.slot-theme-pill {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gold-dark);
+  background: rgba(163, 183, 167, 0.2);
+  border: 1px solid var(--border-gold);
+  padding: 1px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .slot-theme-pill {
+  color: var(--gold-light);
+  background: rgba(163, 183, 167, 0.15);
+}
+
+.appearance-theme-title {
+  color: var(--gold-light);
+  font-weight: 700;
+}
+
+.theme-name {
+  color: var(--gold-dark);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] .theme-name {
+  color: var(--gold-light);
+}
+
+.meta-item.theme-meta-item {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  border: 1px solid var(--border-gold);
+  background: rgba(163, 183, 167, 0.18);
+  color: var(--gold-dark);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+  outline: none;
+  user-select: none;
+  position: relative;
+  z-index: 2;
+}
+
+[data-theme="dark"] .theme-toggle-btn {
+  color: var(--gold-light);
+  background: rgba(163, 183, 167, 0.15);
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(163, 183, 167, 0.35);
+  border-color: var(--gold-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.theme-toggle-btn:active {
+  transform: translateY(0);
+}
+
+.theme-toggle-btn.collapsed {
+  opacity: 0.8;
+  border-style: dashed;
+}
+
+.theme-toggle-btn.collapsed:hover {
+  opacity: 1;
+  border-style: solid;
+}
+
+.theme-toggle-btn .toggle-icon,
+.theme-toggle-btn .toggle-text {
+  pointer-events: none;
+}
+
+.theme-toggle-btn .toggle-icon {
+  font-size: 10px;
+  font-weight: bold;
+  display: inline-block;
+  line-height: 1;
 }
 
 /* Pills & Badges */

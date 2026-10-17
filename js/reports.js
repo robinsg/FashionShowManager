@@ -79,6 +79,16 @@ class FashionReportsEngine {
               <div class="meta-item"><span class="meta-label">VENUE:</span> <span class="meta-val">${this.escapeHtml(show.venue || 'Main Catwalk Stage')}</span></div>
               <div class="meta-item"><span class="meta-label">DATE:</span> <span class="meta-val">${this.escapeHtml(this.formatUKDate(show.date))}</span></div>
               <div class="meta-item"><span class="meta-label">RUNS:</span> <span class="meta-val">${totalAppearances} Catwalk Appearances</span></div>
+              ${(() => {
+                const themeList = [];
+                for (let tIdx = 1; tIdx <= totalAppearances; tIdx++) {
+                  const t = this.store.getAppearanceTheme(show.id, tIdx);
+                  if (t) themeList.push(`#${tIdx} ${t}`);
+                }
+                return themeList.length > 0 
+                  ? `<div class="meta-item"><span class="meta-label">THEMES:</span> <span class="meta-val">${this.escapeHtml(themeList.join(' • '))}</span></div>`
+                  : '';
+              })()}
             </div>
           </div>
         </header>
@@ -102,6 +112,7 @@ class FashionReportsEngine {
       `;
 
       for (let appIdx = 1; appIdx <= totalAppearances; appIdx++) {
+        const theme = this.store.getAppearanceTheme(show.id, appIdx);
         const assignment = this.store.getAssignment(show.id, model.id, appIdx);
         const clothingItems = (assignment.clothingIds || []).map(id => this.store.getItemById(show.id, id)).filter(Boolean);
         const jewelleryItems = (assignment.jewelleryIds || []).map(id => this.store.getItemById(show.id, id)).filter(Boolean);
@@ -114,7 +125,7 @@ class FashionReportsEngine {
             <div class="appearance-block-header">
               <div class="appearance-number">
                 <span class="app-icon">✦</span>
-                CATWALK APPEARANCE #${appIdx}
+                CATWALK APPEARANCE #${appIdx}${theme ? ` — <span class="theme-name">${this.escapeHtml(theme.toUpperCase())}</span>` : ''}
               </div>
               <div class="appearance-count-pill">${totalItemsCount} Total Items Worn</div>
             </div>
@@ -258,6 +269,7 @@ class FashionReportsEngine {
     `;
 
     appIndices.forEach(appIdx => {
+      const theme = this.store.getAppearanceTheme(show.id, appIdx);
       let appearanceTotalValue = 0;
       let appearancePieceCount = 0;
 
@@ -335,8 +347,8 @@ class FashionReportsEngine {
         <section class="catwalk-appearance-section print-page-break">
           <div class="appearance-section-banner">
             <div class="banner-title-area">
-              <span class="run-kicker">Catwalk Sequence</span>
-              <h2 class="appearance-title">Fashion Theme</h2>
+              <span class="run-kicker">Catwalk Sequence • Appearance #${appIdx}</span>
+              <h2 class="appearance-title">Appearance #${appIdx}${theme ? ` — ${this.escapeHtml(theme)}` : ''}</h2>
             </div>
             <div class="appearance-stats-box">
               <div class="stat-bubble">

@@ -7,8 +7,8 @@
   <title>Heidi Boutique// Fashion Show Runway & Wardrobe Manager</title>
   <meta name="description"
     content="Management system for fashion shows: model rosters, catwalk appearances, clothing, jewellery, footwear, retail pricing, and printable staff and customer reports.">
-  <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/print.css" media="print">
+  <link rel="stylesheet" href="css/main.css?v=2.1">
+  <link rel="stylesheet" href="css/print.css?v=2.1" media="print">
 </head>
 
 <body>
@@ -183,6 +183,23 @@
                 <input type="number" id="edit-show-appearances" class="form-input" min="1" max="5" value="4" required>
                 <small style="color: var(--text-dim); font-size: 11px;">Each model will walk the catwalk this many
                   times.</small>
+              </div>
+
+              <div class="form-group" id="appearance-themes-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <label class="form-label" style="margin-bottom: 0;">Catwalk Appearance Themes (1 to 5)</label>
+                  <button type="button" id="btn-toggle-edit-themes" class="pill pill-gold pill-xs theme-toggle-btn" onclick="window.app && window.app.toggleEditThemes(event)" aria-expanded="true" title="Click to show or hide appearance themes">
+                    <span class="toggle-icon">▾</span> <span class="toggle-text">Report Themes</span>
+                  </button>
+                </div>
+                <div id="edit-show-themes-collapsible">
+                  <p style="font-size: 12px; color: var(--text-dim); margin-top: 2px; margin-bottom: 8px;">
+                    Define an optional theme for each appearance (e.g. Appearance #1 Denim, Appearance #2 Leisureware). These appear on Customer Lookbooks and Backstage Wardrobe Reports.
+                  </p>
+                  <div id="appearance-themes-inputs-list" class="themes-inputs-stack">
+                    <!-- Rendered dynamically via JS based on catwalk appearances (1-5) -->
+                  </div>
+                </div>
               </div>
 
               <button type="submit" class="btn btn-primary w-100">Save Fashion Show Details</button>
@@ -395,6 +412,22 @@
             <label class="form-label" for="new-show-appearances">Catwalk Appearances per Model (1 - 5)</label>
             <input type="number" id="new-show-appearances" class="form-input" min="1" max="5" value="3" required>
           </div>
+          <div class="form-group" id="new-show-themes-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label class="form-label" style="margin-bottom: 0;">Catwalk Appearance Themes (Optional)</label>
+              <button type="button" id="btn-toggle-new-themes" class="pill pill-gold pill-xs theme-toggle-btn" onclick="window.app && window.app.toggleNewThemes(event)" aria-expanded="true" title="Click to show or hide appearance themes">
+                <span class="toggle-icon">▾</span> <span class="toggle-text">Optional Themes</span>
+              </button>
+            </div>
+            <div id="new-show-themes-collapsible">
+              <p style="font-size: 11px; color: var(--text-dim); margin-top: 2px; margin-bottom: 6px;">
+                Specify optional theme names for each catwalk run (e.g. Appearance #1 Denim, Appearance #2 Leisureware).
+              </p>
+              <div id="new-show-themes-inputs-list" class="themes-inputs-stack">
+                <!-- Rendered dynamically via JS based on new-show-appearances -->
+              </div>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
@@ -515,13 +548,41 @@
     </div>
   </div>
 
+  <!-- Modal: Edit Catwalk Appearance Theme -->
+  <div id="modal-theme-edit" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog modal-sm">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-theme-title">Edit Appearance Theme</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="form-theme-edit">
+        <div class="modal-body">
+          <input type="hidden" id="theme-edit-app-index">
+          <div class="form-group">
+            <label class="form-label" for="theme-edit-name" id="theme-edit-label">Theme Name</label>
+            <input type="text" id="theme-edit-name" class="form-input" required
+              placeholder="e.g. Denim, Leisureware, Eveningwear">
+            <small style="color: var(--text-dim); font-size: 11px; margin-top: 4px; display: block;">
+              This theme appears on the Customer Lookbook and Staff Wardrobe reports.
+            </small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Theme</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div id="toast-container" aria-live="polite"></div>
 
   <!-- Scripts -->
-  <script src="js/store.js"></script>
-  <script src="js/reports.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/store.js?v=2.1"></script>
+  <script src="js/reports.js?v=2.1"></script>
+  <script src="js/app.js?v=2.1"></script>
 </body>
 
 </html>

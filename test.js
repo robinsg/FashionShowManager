@@ -24,6 +24,8 @@ async function runTests() {
   assert.strictEqual(data.shows[0].models.length, 5, 'Should have 5 models in first show');
   assert.strictEqual(data.shows[0].items.length, 22, 'Should have 22 wardrobe items in first show');
   assert.strictEqual(Object.keys(data.shows[0].assignments).length, 20, 'Should have 20 assignments');
+  assert.strictEqual(data.shows[0].appearanceThemes['1'], 'Denim', 'Should have Appearance #1 Denim theme');
+  assert.strictEqual(data.shows[0].appearanceThemes['2'], 'Leisureware', 'Should have Appearance #2 Leisureware theme');
   console.log('   ✓ Database initialized & seeded successfully.');
 
   // 2. Test Show Operations
@@ -35,14 +37,22 @@ async function runTests() {
     date: '2027-04-10',
     venue: 'Milan Fashion Week Hall',
     currency: '€',
-    catwalkAppearances: 3
+    catwalkAppearances: 3,
+    appearanceThemes: { 1: 'Denim Look', 2: 'Silk & Linen' }
   });
   assert.strictEqual(newShow.name, 'Test Runway 2027');
+  assert.strictEqual(newShow.appearanceThemes['1'], 'Denim Look');
   assert.strictEqual(db.getAllData().activeShowId, newShow.id);
 
-  // Update show
-  const updatedShow = db.updateShow(newShow.id, { venue: 'Paris Palais' });
+  // Update show & appearance theme
+  const updatedShow = db.updateShow(newShow.id, { venue: 'Paris Palais', appearanceThemes: { 1: 'Denim Couture' } });
   assert.strictEqual(updatedShow.venue, 'Paris Palais');
+  assert.strictEqual(updatedShow.appearanceThemes['1'], 'Denim Couture');
+
+  // Test setAppearanceTheme
+  db.setAppearanceTheme(newShow.id, 3, 'Gala Finale');
+  const showWithTheme = db.getShowById(newShow.id);
+  assert.strictEqual(showWithTheme.appearanceThemes['3'], 'Gala Finale');
 
   // Duplicate show
   const copyShow = db.duplicateShow(newShow.id, 'Test Runway 2027 Duplicate');
@@ -164,6 +174,16 @@ async function runTests() {
         const migrateJson = await resMigrate.json();
         assert.strictEqual(migrateJson.success, true);
         assert.strictEqual(migrateJson.migrated, true);
+
+        // Themes endpoint
+        const resTheme = await fetch(`http://127.0.0.1:${TEST_PORT}/api/shows/show_2026_ss/themes/1`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ theme: 'Denim Chic' })
+        });
+        const themeJson = await resTheme.json();
+        assert.strictEqual(themeJson.success, true);
+        assert.strictEqual(themeJson.appearanceThemes['1'], 'Denim Chic');
 
         server.close(() => {
           console.log('   ✓ Server REST API endpoints verified.');

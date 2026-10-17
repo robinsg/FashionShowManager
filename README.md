@@ -48,6 +48,7 @@ Heidi Boutique hosts runway fashion shows twice per year (such as Spring/Summer 
 | **Model Capacity** | Up to **5 models** per fashion show event. Models are identified by their first name and have dedicated backstage dressing notes. |
 | **Walk Order Sequence** | Models appear on the catwalk in the exact same designated sequence for each appearance (e.g. Model 1 $\rightarrow$ Model 2 $\rightarrow$ Model 3 $\rightarrow$ Model 4 $\rightarrow$ Model 5). Order can be adjusted via 1-click controls. |
 | **Catwalk Appearances** | Each model can walk the catwalk **up to 5 times** per show (configurable between 1 and 5 appearances). |
+| **Appearance Themes** | Each catwalk appearance (1 to 5) can have a custom theme title (e.g. *Appearance #1 Denim*, *Appearance #2 Leisureware*). Themes appear on outfit slots, run sequence headers, and reports. |
 | **Wardrobe per Appearance** | Enforced limits per catwalk appearance:<br>• Up to **4 items of clothing**<br>• Up to **4 items of jewellery**<br>• Up to **1 item of footwear** |
 | **Wardrobe Reusability** | Items of clothing, jewellery, and footwear are not restricted to one model or one appearance; any piece can be styled across multiple looks. |
 | **Retail Pricing & Currency** | Each wardrobe item carries a retail price (defaulting to GBP `£`), with support for custom currency symbols. |
@@ -124,7 +125,8 @@ For production deployment inside a Linux Container (LXC) on Debian 12 (Bookworm)
 ### 5. Backstage Staff Wardrobe Report
 - Click the **📋 Staff Wardrobe Report** tab.
 - Designed specifically for dressing assistants and backstage coordinators.
-- Displays each model in walk sequence order with their dresser notes and appearance-by-appearance breakdown.
+- Displays each model in walk sequence order with their dresser notes and appearance-by-appearance breakdown, with custom appearance themes highlighted (e.g. `CATWALK APPEARANCE #1 — DENIM`).
+- Header meta summary includes complete runway theme breakdown.
 - Each look contains an interactive checklist for clothing, jewellery, and footwear so dressers can verify items before the model walks the catwalk.
 - Use the **Filter by Model** dropdown to display all models or isolate a single model.
 - Click **🖨 Print Staff Report** to print physical dressing sheets.
@@ -132,8 +134,9 @@ For production deployment inside a Linux Container (LXC) on Debian 12 (Bookworm)
 ### 6. Customer Runway Programme & Lookbook
 - Click the **🏷️ Customer Lookbook** tab.
 - Designed for attendees, VIP clients, and retail buyers.
-- Organised by **Catwalk Appearance**, presenting models in strict walk order (`#1` to `#5`).
+- Organised by **Catwalk Appearance**, presenting custom theme titles in sequence banners (e.g. `Appearance #1 — Denim`, `Appearance #2 — Leisureware`).
 - Displays category badges, item descriptions, and individual retail prices.
+- Dropdown filter lists appearance runs with their corresponding theme names.
 - Automatically calculates:
   - Individual **Look Totals**
   - Catwalk **Sequence Valuations**

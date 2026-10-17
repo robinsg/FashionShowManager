@@ -236,6 +236,17 @@ async function handleApiRequest(req, res, pathname) {
           return sendJson(res, 200, { success: true });
         }
       }
+
+      // PUT /api/shows/:id/themes/:appearanceIndex
+      const themeMatch = subPath.match(/^\/themes\/(\d+)$/);
+      if (themeMatch) {
+        const appIndex = parseInt(themeMatch[1], 10);
+        if (method === 'PUT') {
+          const body = await parseJsonBody(req);
+          const updatedThemes = db.setAppearanceTheme(showId, appIndex, body.theme);
+          return sendJson(res, 200, { success: true, appearanceThemes: updatedThemes });
+        }
+      }
     }
 
     return sendJson(res, 404, { error: `API route not found: ${method} ${pathname}` });
@@ -281,7 +292,7 @@ const server = http.createServer(async (req, res) => {
     } else {
       res.writeHead(200, {
         'Content-Type': contentType,
-        'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=3600'
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
       });
       res.end(content);
     }
