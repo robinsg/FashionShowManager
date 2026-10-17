@@ -1,0 +1,451 @@
+/* ===================================================================
+   ATELIER // High-Fashion Runway Print Media Stylesheet
+   Optimized for A4 / Letter Paper with crisp high-contrast formatting
+   =================================================================== */
+
+@media print {
+  /* Page Setup */
+  @page {
+    size: A4 portrait;
+    margin: 15mm 12mm 15mm 12mm;
+  }
+
+  /* Reset body & background */
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body::before {
+    display: none !important;
+  }
+
+  /* Hide all non-printable UI chrome */
+  .app-header,
+  .secondary-bar,
+  .nav-tabs,
+  .top-utility-buttons,
+  .report-view-controls,
+  .view-header,
+  .btn,
+  .modal,
+  #toast-container,
+  .clone-bar,
+  .inline-edit-btn,
+  .model-actions-quick,
+  .model-card-footer,
+  .catwalk-slot-card .slot-footer,
+  #file-input-import {
+    display: none !important;
+  }
+
+  /* Hide non-active tab panels if any, or hide everything except target printable report */
+  .tab-panel:not(.active) {
+    display: none !important;
+  }
+
+  /* When printing specific report */
+  body.printing-staff #tab-overview,
+  body.printing-staff #tab-models,
+  body.printing-staff #tab-catalog,
+  body.printing-staff #tab-outfits,
+  body.printing-staff #tab-report-customer,
+  body.printing-staff .customer-report-theme {
+    display: none !important;
+  }
+
+  body.printing-customer #tab-overview,
+  body.printing-customer #tab-models,
+  body.printing-customer #tab-catalog,
+  body.printing-customer #tab-outfits,
+  body.printing-customer #tab-report-staff,
+  body.printing-customer .staff-report-theme {
+    display: none !important;
+  }
+
+  .main-content {
+    padding: 0 !important;
+  }
+
+  .app-container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .report-preview-sheet {
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  /* =======================================================
+     1. Staff Wardrobe Checklist Print Styling
+     ======================================================= */
+  .staff-report-theme {
+    color: #111111 !important;
+  }
+
+  .staff-report-theme .report-header {
+    border-bottom: 2pt solid #000000 !important;
+    padding-bottom: 10pt !important;
+    margin-bottom: 14pt !important;
+  }
+
+  .staff-report-theme .report-title {
+    color: #000000 !important;
+    font-size: 20pt !important;
+    font-weight: 700 !important;
+  }
+
+  .staff-report-theme .brand-eyebrow {
+    color: #444444 !important;
+    font-size: 8pt !important;
+    letter-spacing: 1.5pt !important;
+  }
+
+  .staff-report-theme .report-subtitle {
+    color: #555555 !important;
+    font-size: 9pt !important;
+  }
+
+  .staff-report-theme .report-meta-box {
+    background: #f4f4f5 !important;
+    border: 1pt solid #cccccc !important;
+    color: #111111 !important;
+    padding: 6pt 10pt !important;
+  }
+
+  .staff-report-theme .meta-val {
+    color: #000000 !important;
+  }
+
+  /* Page Break per Model Dossier so each model gets their own physical run sheet! */
+  .model-dossier-card.print-page-break {
+    page-break-after: always !important;
+    break-after: page !important;
+    border: 1pt solid #333333 !important;
+    background: #ffffff !important;
+    margin-bottom: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .model-dossier-card.print-page-break:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  .dossier-model-header {
+    background: #f0f0f2 !important;
+    border-bottom: 1.5pt solid #222222 !important;
+    padding: 10pt 14pt !important;
+  }
+
+  .walk-badge {
+    background: #000000 !important;
+    color: #ffffff !important;
+    font-size: 9pt !important;
+    font-weight: 800 !important;
+    padding: 2pt 8pt !important;
+    border-radius: 2pt !important;
+  }
+
+  .model-name {
+    color: #000000 !important;
+    font-size: 18pt !important;
+    font-weight: 700 !important;
+  }
+
+  .dossier-notes {
+    background: #ffffff !important;
+    border: 1pt solid #999999 !important;
+    color: #222222 !important;
+    font-size: 8.5pt !important;
+  }
+
+  .notes-tag {
+    color: #000000 !important;
+    font-weight: 800 !important;
+  }
+
+  .appearances-strip {
+    padding: 12pt !important;
+    gap: 12pt !important;
+  }
+
+  .appearance-wardrobe-block {
+    background: #ffffff !important;
+    border: 1pt solid #bbbbbb !important;
+    border-radius: 0 !important;
+    padding: 8pt 10pt !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .appearance-block-header {
+    border-bottom: 1pt solid #cccccc !important;
+    margin-bottom: 8pt !important;
+    padding-bottom: 4pt !important;
+  }
+
+  .appearance-number {
+    color: #000000 !important;
+    font-size: 11pt !important;
+    font-weight: 700 !important;
+  }
+
+  .app-icon {
+    display: none !important;
+  }
+
+  .appearance-count-pill {
+    color: #555555 !important;
+    font-size: 8.5pt !important;
+  }
+
+  .wardrobe-categories-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 8pt !important;
+  }
+
+  .category-column {
+    background: #fafafa !important;
+    border: 0.75pt solid #cccccc !important;
+    border-radius: 0 !important;
+    padding: 6pt 8pt !important;
+  }
+
+  .cat-col-header {
+    color: #000000 !important;
+    font-size: 8.5pt !important;
+    font-weight: 800 !important;
+    border-bottom: 0.5pt solid #dddddd !important;
+    padding-bottom: 3pt !important;
+    margin-bottom: 5pt !important;
+  }
+
+  .cat-dot {
+    display: none !important;
+  }
+
+  .checklist-item {
+    padding: 2pt 0 !important;
+  }
+
+  .check-container {
+    color: #111111 !important;
+    font-size: 8.5pt !important;
+  }
+
+  /* Physical checkable square */
+  .staff-check-input {
+    width: 12pt !important;
+    height: 12pt !important;
+    border: 1pt solid #000000 !important;
+    margin-right: 4pt !important;
+  }
+
+  .no-items-placeholder {
+    color: #888888 !important;
+    font-size: 8pt !important;
+  }
+
+  /* =======================================================
+     2. Customer Lookbook Print Styling
+     ======================================================= */
+  .customer-report-theme {
+    color: #111111 !important;
+  }
+
+  .lookbook-cover-header {
+    border-bottom: 2pt solid #000000 !important;
+    padding-bottom: 14pt !important;
+    margin-bottom: 18pt !important;
+    text-align: center !important;
+  }
+
+  .collection-season {
+    color: #333333 !important;
+    font-size: 9pt !important;
+    letter-spacing: 2pt !important;
+  }
+
+  .lookbook-title {
+    color: #000000 !important;
+    font-size: 22pt !important;
+    font-weight: 700 !important;
+  }
+
+  .lookbook-subtitle {
+    color: #555555 !important;
+    font-size: 10pt !important;
+  }
+
+  .lookbook-details-bar {
+    color: #666666 !important;
+    font-size: 8.5pt !important;
+    margin-top: 8pt !important;
+  }
+
+  .catwalk-appearance-section.print-page-break {
+    page-break-before: always !important;
+    break-before: page !important;
+    border: 1pt solid #333333 !important;
+    background: #ffffff !important;
+    margin-bottom: 16pt !important;
+    border-radius: 0 !important;
+  }
+
+  .catwalk-appearance-section.print-page-break:first-of-type {
+    page-break-before: auto !important;
+    break-before: auto !important;
+  }
+
+  .appearance-section-banner {
+    background: #f0f0f2 !important;
+    border-bottom: 1.5pt solid #222222 !important;
+    padding: 10pt 14pt !important;
+  }
+
+  .run-kicker {
+    color: #444444 !important;
+    font-size: 8pt !important;
+  }
+
+  .appearance-title {
+    color: #000000 !important;
+    font-size: 16pt !important;
+  }
+
+  .stat-number {
+    color: #000000 !important;
+    font-size: 13pt !important;
+  }
+
+  .stat-text {
+    color: #555555 !important;
+    font-size: 8pt !important;
+  }
+
+  .models-sequence-list {
+    padding: 12pt !important;
+    gap: 12pt !important;
+  }
+
+  .customer-model-entry {
+    background: #ffffff !important;
+    border: 1pt solid #bbbbbb !important;
+    border-radius: 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .model-entry-header {
+    background: #f9f9fa !important;
+    border-bottom: 1pt solid #cccccc !important;
+    padding: 8pt 12pt !important;
+  }
+
+  .walk-order-tag {
+    background: #000000 !important;
+    color: #ffffff !important;
+    font-size: 8.5pt !important;
+    padding: 1.5pt 6pt !important;
+  }
+
+  .model-heading {
+    color: #000000 !important;
+    font-size: 14pt !important;
+  }
+
+  .total-label {
+    color: #555555 !important;
+    font-size: 8pt !important;
+  }
+
+  .total-val {
+    color: #000000 !important;
+    font-size: 13pt !important;
+    font-weight: 700 !important;
+  }
+
+  .lookbook-items-table {
+    border-collapse: collapse !important;
+  }
+
+  .lookbook-items-table th {
+    background: #eeeeee !important;
+    color: #333333 !important;
+    font-size: 8pt !important;
+    border-bottom: 1pt solid #cccccc !important;
+    padding: 5pt 10pt !important;
+  }
+
+  .lookbook-items-table td {
+    color: #111111 !important;
+    font-size: 8.5pt !important;
+    border-bottom: 0.5pt solid #e0e0e0 !important;
+    padding: 5pt 10pt !important;
+  }
+
+  .badge-cat {
+    border: 0.5pt solid #777777 !important;
+    background: #ffffff !important;
+    color: #111111 !important;
+    font-size: 7.5pt !important;
+    padding: 1pt 5pt !important;
+  }
+
+  .col-price {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    font-size: 9.5pt !important;
+  }
+
+  .customer-grand-summary {
+    background: #fafafa !important;
+    border: 1.5pt solid #000000 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 14pt !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin-top: 18pt !important;
+  }
+
+  .summary-label {
+    color: #444444 !important;
+    font-size: 8pt !important;
+  }
+
+  .summary-number {
+    color: #000000 !important;
+    font-size: 16pt !important;
+  }
+
+  .summary-number.big-number {
+    color: #000000 !important;
+    -webkit-text-fill-color: initial !important;
+    background: none !important;
+    font-size: 18pt !important;
+  }
+
+  .summary-disclaimer {
+    color: #666666 !important;
+    font-size: 7.5pt !important;
+  }
+
+  .report-footer {
+    border-top: 1pt solid #cccccc !important;
+    color: #777777 !important;
+    font-size: 8pt !important;
+    margin-top: 20pt !important;
+  }
+}

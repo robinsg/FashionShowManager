@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heidi Boutique// Fashion Show Runway & Wardrobe Manager</title>
+  <meta name="description"
+    content="Management system for fashion shows: model rosters, catwalk appearances, clothing, jewellery, footwear, retail pricing, and printable staff and customer reports.">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/print.css" media="print">
+</head>
+
+<body>
+
+  <!-- Top Application Header -->
+  <header class="app-header">
+    <div class="app-container">
+      <div class="header-inner">
+        <!-- Brand Mark -->
+        <div class="brand-section">
+          <div class="brand-mark">❖</div>
+          <div>
+            <h1 class="brand-title">
+              Heidi Boutique
+              <span class="brand-badge">RUNWAY OS</span>
+            </h1>
+            <p class="brand-tagline">Catwalk Wardrobe & Retail Lookbook System</p>
+          </div>
+        </div>
+
+        <!-- Show Selector & Quick Actions -->
+        <div class="header-actions">
+          <div class="show-picker-box">
+            <span class="show-picker-label">SHOW:</span>
+            <select id="current-show-select" class="show-dropdown" aria-label="Select active fashion show"></select>
+          </div>
+          <button id="btn-new-show" class="btn btn-primary btn-sm">+ New Show</button>
+          <button id="btn-manage-shows" class="btn btn-secondary btn-sm" title="View all fashion shows">Manage
+            Shows</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Secondary Bar: Navigation Tabs & Utilities -->
+  <div class="secondary-bar">
+    <div class="app-container">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs" role="tablist">
+          <button class="nav-tab-btn active" data-tab="overview" role="tab" id="tab-btn-overview">
+            <span>📊</span> Show Overview
+          </button>
+          <button class="nav-tab-btn" data-tab="models" role="tab" id="tab-btn-models">
+            <span>👥</span> Models Roster <span class="tab-badge-highlight" id="models-tab-count">5 Max</span>
+          </button>
+          <button class="nav-tab-btn" data-tab="catalog" role="tab" id="tab-btn-catalog">
+            <span>👗</span> Wardrobe Catalogue
+          </button>
+          <button class="nav-tab-btn" data-tab="outfits" role="tab" id="tab-btn-outfits">
+            <span>👠</span> Catwalk Outfits Grid
+          </button>
+          <button class="nav-tab-btn" data-tab="report-staff" role="tab" id="tab-btn-report-staff">
+            <span>📋</span> Staff Wardrobe Report
+          </button>
+          <button class="nav-tab-btn" data-tab="report-customer" role="tab" id="tab-btn-report-customer">
+            <span>🏷️</span> Customer Lookbook
+          </button>
+        </nav>
+
+        <!-- Utility Buttons -->
+        <div class="top-utility-buttons">
+          <button id="btn-export-data" class="btn btn-secondary btn-sm" title="Export all data to JSON backup">⬇
+            Export</button>
+          <button id="btn-import-data" class="btn btn-secondary btn-sm" title="Import JSON backup">⬆ Import</button>
+          <input type="file" id="file-input-import" accept=".json" style="display: none;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Panels -->
+  <main class="main-content">
+    <div class="app-container">
+
+      <!-- ==============================================================
+           TAB 1: SHOW OVERVIEW & SETTINGS
+           ============================================================== -->
+      <section id="tab-overview" class="tab-panel active" role="tabpanel">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h2 id="overview-title">Fashion Show Overview</h2>
+            <p>Master configuration for the bi-annual runway event, model limits, and runway appearances.</p>
+          </div>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="stats-cards-grid">
+          <div class="stat-card">
+            <span class="stat-label">Active Fashion Show</span>
+            <div class="stat-value" id="stat-show-name">—</div>
+            <span class="stat-sub">Bi-annual event</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Catwalk Appearances</span>
+            <div class="stat-value gold-text" id="stat-appearances-count">—</div>
+            <span class="stat-sub">Up to 5 rounds per model</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Models on Catwalk</span>
+            <div class="stat-value" id="stat-models-count">—</div>
+            <span class="stat-sub">Strict walk order maintained</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Wardrobe Catalogue</span>
+            <div class="stat-value" id="stat-items-count">—</div>
+            <span class="stat-sub">Clothing, Jewellery, Footwear</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Total Runway Valuation</span>
+            <div class="stat-value gold-text" id="stat-valuation">—</div>
+            <span class="stat-sub">Combined retail value</span>
+          </div>
+        </div>
+
+        <div class="overview-sections-grid">
+          <!-- Left: Show Settings Form -->
+          <div class="overview-box">
+            <div class="box-title">
+              <span>Show Details & Parameters</span>
+            </div>
+            <form id="form-show-details">
+              <div class="form-group">
+                <label class="form-label" for="edit-show-name">Fashion Show Name</label>
+                <input type="text" id="edit-show-name" class="form-input" required
+                  placeholder="e.g. LUMIÈRE // Haute Couture Spring/Summer 2026">
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="edit-show-season">Season</label>
+                  <select id="edit-show-season" class="form-select">
+                    <option value="Spring/Summer">Spring / Summer</option>
+                    <option value="Autumn/Winter">Autumn / Winter</option>
+                    <option value="Pre-Autumn">Pre-Autumn</option>
+                    <option value="Autumn">Autumn</option>
+                    <option value="Resort">Resort / Cruise</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="edit-show-year">Year</label>
+                  <input type="number" id="edit-show-year" class="form-input" min="2020" max="2050" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="edit-show-date">Event Date</label>
+                  <input type="date" id="edit-show-date" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="edit-show-currency">Currency Symbol</label>
+                  <input type="text" id="edit-show-currency" class="form-input" value="£" maxlength="3" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="edit-show-venue">Runway Venue / Location</label>
+                <input type="text" id="edit-show-venue" class="form-input"
+                  placeholder="e.g. The Grand Ballroom, Mayfair, London">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="edit-show-appearances">Catwalk Appearances per Model (1 - 5 runs)</label>
+                <input type="number" id="edit-show-appearances" class="form-input" min="1" max="5" value="4" required>
+                <small style="color: var(--text-dim); font-size: 11px;">Each model will walk the catwalk this many
+                  times.</small>
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100">Save Fashion Show Details</button>
+            </form>
+          </div>
+
+          <!-- Right: Catwalk Walk Sequence Preview -->
+          <div class="overview-box">
+            <div class="box-title">
+              <span>Catwalk Walk Order Sequence</span>
+              <span class="pill pill-gold">Fixed Order</span>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+              Per fashion show specifications, models walk in the same designated order for every catwalk appearance:
+            </p>
+            <div id="walk-order-list-preview">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           TAB 2: MODELS ROSTER
+           ============================================================== -->
+      <section id="tab-models" class="tab-panel" role="tabpanel">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h2>Models Roster</h2>
+            <p>Manage the models participating in this fashion show (up to 5 models). Models walk in exact sequence
+              order.</p>
+          </div>
+          <div class="view-actions">
+            <span class="pill pill-dim" id="models-count-indicator">0 / 5 Models Configured</span>
+            <button id="btn-add-model" class="btn btn-primary">+ Add Model</button>
+          </div>
+        </div>
+
+        <div id="models-roster-list">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           TAB 3: WARDROBE & RETAIL PRICES CATALOG
+           ============================================================== -->
+      <section id="tab-catalog" class="tab-panel" role="tabpanel">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h2>Wardrobe & Retail Price Catalogue</h2>
+            <p>Manage clothing, jewellery, and footwear items and their retail prices. Prices update automatically
+              across all reports.</p>
+          </div>
+          <div class="view-actions">
+            <span class="pill pill-gold" id="catalog-count-badge">0 Items Listed</span>
+            <button id="btn-add-item" class="btn btn-primary">+ Add New Item</button>
+          </div>
+        </div>
+
+        <div class="catalog-toolbar">
+          <div class="category-filter-group">
+            <button class="filter-btn active" data-filter="all">All Categories</button>
+            <button class="filter-btn" data-filter="clothing">👗 Clothing</button>
+            <button class="filter-btn" data-filter="jewellery">💎 Jewellery</button>
+            <button class="filter-btn" data-filter="footwear">👠 Footwear</button>
+          </div>
+          <div class="catalog-sort-group">
+            <label for="catalog-sort-select" class="sort-label">Sort by:</label>
+            <select id="catalog-sort-select" class="form-select form-input-sm sort-dropdown" aria-label="Sort wardrobe catalogue">
+              <option value="default">Default Order</option>
+              <option value="category-asc">Category (A → Z)</option>
+              <option value="category-desc">Category (Z → A)</option>
+              <option value="name-asc">Item Name (A → Z)</option>
+              <option value="name-desc">Item Name (Z → A)</option>
+              <option value="price-asc">Retail Price (Low → High)</option>
+              <option value="price-desc">Retail Price (High → Low)</option>
+            </select>
+          </div>
+          <div class="search-box">
+            <input type="text" id="catalog-search-input" class="form-input form-input-sm"
+              placeholder="🔍 Search item name...">
+          </div>
+        </div>
+
+        <div id="items-catalog-grid">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           TAB 4: CATWALK OUTFITS (ASSIGNMENT MATRIX)
+           ============================================================== -->
+      <section id="tab-outfits" class="tab-panel" role="tabpanel">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h2>Catwalk Outfits Assignment</h2>
+            <p>Assign items for each catwalk appearance. Enforces rules: up to 4 clothing, 4 jewellery, and 1 footwear
+              item.</p>
+          </div>
+          <div class="view-actions">
+            <label for="outfit-view-mode" style="font-size: 12px; color: var(--text-muted); font-weight: 600;">VIEW
+              BY:</label>
+            <select id="outfit-view-mode" class="form-select form-input-sm" style="width: auto;">
+              <option value="by-model">Group by Model (All Runs)</option>
+              <option value="by-appearance">Group by Catwalk Run Order</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="outfits-matrix-view">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           TAB 5: STAFF WARDROBE REPORT (BY MODEL)
+           ============================================================== -->
+      <section id="tab-report-staff" class="tab-panel" role="tabpanel">
+        <div class="report-view-controls">
+          <div class="report-filter-wrap">
+            <label for="staff-model-filter" class="form-label" style="margin-bottom: 0;">FILTER BY MODEL:</label>
+            <select id="staff-model-filter" class="form-select form-input-sm" style="width: 220px;"></select>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <span style="font-size: 12px; color: var(--text-dim);">Dresser & Backstage Checklist</span>
+            <button id="btn-print-staff-report" class="btn btn-primary btn-sm">🖨 Print Staff Report</button>
+          </div>
+        </div>
+
+        <div class="report-preview-sheet" id="staff-report-content">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           TAB 6: CUSTOMER RUNWAY LOOKBOOK & PRICES (BY APPEARANCE)
+           ============================================================== -->
+      <section id="tab-report-customer" class="tab-panel" role="tabpanel">
+        <div class="report-view-controls">
+          <div class="report-filter-wrap">
+            <label for="customer-appearance-filter" class="form-label" style="margin-bottom: 0;">CATWALK
+              APPEARANCE:</label>
+            <select id="customer-appearance-filter" class="form-select form-input-sm" style="width: 220px;"></select>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <span style="font-size: 12px; color: var(--text-dim);">Client Programme & Retail Pricing</span>
+            <button id="btn-print-customer-report" class="btn btn-primary btn-sm">🖨 Print Customer Lookbook</button>
+          </div>
+        </div>
+
+        <div class="report-preview-sheet" id="customer-report-content">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ================================================================
+       MODALS
+       ================================================================ -->
+
+  <!-- Modal: New Fashion Show -->
+  <div id="modal-new-show" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Create New Fashion Show</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="form-new-show">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="new-show-name">Fashion Show Name</label>
+            <input type="text" id="new-show-name" class="form-input" required
+              placeholder="e.g. ECLIPSE // Autumn/Winter 2026 Collection">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="new-show-season">Season</label>
+              <select id="new-show-season" class="form-select">
+                <option value="Spring/Summer">Spring / Summer</option>
+                <option value="Autumn/Winter">Autumn / Winter</option>
+                <option value="Pre-Autumn">Pre-Autumn</option>
+                <option value="Autumn">Autumn</option>
+                <option value="Resort">Resort / Cruise</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="new-show-year">Year</label>
+              <input type="number" id="new-show-year" class="form-input" value="2026" min="2020" max="2050" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="new-show-date">Event Date</label>
+              <input type="date" id="new-show-date" class="form-input" value="2026-10-24">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="new-show-currency">Currency Symbol</label>
+              <input type="text" id="new-show-currency" class="form-input" value="£" maxlength="3" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new-show-venue">Venue / Location</label>
+            <input type="text" id="new-show-venue" class="form-input"
+              placeholder="e.g. Royal Horticultural Halls, London">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new-show-appearances">Catwalk Appearances per Model (1 - 5)</label>
+            <input type="number" id="new-show-appearances" class="form-input" min="1" max="5" value="3" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Show</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Manage Fashion Shows -->
+  <div id="modal-manage-shows" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Fashion Shows Directory</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+          Manage current and upcoming fashion shows hosted throughout the year. You can switch between shows or create
+          duplicate baselines.
+        </p>
+        <div id="manage-shows-list">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary modal-close-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Model Add/Edit -->
+  <div id="modal-model-edit" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-model-title">Add Model</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="form-model-edit">
+        <div class="modal-body">
+          <input type="hidden" id="model-edit-id">
+          <div class="form-group">
+            <label class="form-label" for="model-edit-name">Model First Name</label>
+            <input type="text" id="model-edit-name" class="form-input" required
+              placeholder="e.g. Elena, Sophia, Marcus">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="model-edit-notes">Backstage / Dressing Notes (Optional)</label>
+            <textarea id="model-edit-notes" class="form-textarea"
+              placeholder="e.g. Quick hair re-pin between appearances 2 & 3, shoe size 39 EU"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Model</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Wardrobe Item Add/Edit -->
+  <div id="modal-item-edit" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-item-title">Add Item</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="form-item-edit">
+        <div class="modal-body">
+          <input type="hidden" id="item-edit-id">
+          <div class="form-group">
+            <label class="form-label" for="item-edit-name">Item Name & Description</label>
+            <input type="text" id="item-edit-name" class="form-input" required
+              placeholder="e.g. Silk Organza Trench Coat">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="item-edit-category">Category</label>
+            <select id="item-edit-category" class="form-select" required>
+              <option value="clothing">👗 Clothing (Up to 4 per appearance)</option>
+              <option value="jewellery">💎 Jewellery (Up to 4 per appearance)</option>
+              <option value="footwear">👠 Footwear (1 per appearance)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="item-edit-price">Retail Price</label>
+            <input type="number" step="0.01" min="0" id="item-edit-price" class="form-input" required
+              placeholder="e.g. 850.00">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Wardrobe Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Interactive Outfit Builder -->
+  <div id="modal-outfit-builder" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" id="builder-modal-title">Style Outfit</h3>
+          <p id="builder-modal-subtitle" style="font-size: 12px; color: var(--text-dim); margin-top: 2px;"></p>
+        </div>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body" id="builder-content-area">
+        <!-- Rendered via JS -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary modal-close-btn">Done Styling</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- Scripts -->
+  <script src="js/store.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>
