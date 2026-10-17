@@ -36,8 +36,7 @@ Heidi Boutique hosts runway fashion shows twice per year (such as Spring/Summer 
 - **Live Inline Retail Price Updates**: Modify prices directly in the catalogue table with instant re-calculation across look totals and reports.
 - **Dedicated Printable Reports**:
   1. **Backstage Staff Wardrobe Report**: Organised by model, featuring item checklists and dresser notes for backstage helpers.
-  2. **Customer Runway Programme**: Organised by catwalk appearance, in walk order, displaying modelled pieces and retail prices for buyers and attendees.
-- **Local Persistence & JSON Portability**: Automatic browser `localStorage` saving, with full JSON file export and import.
+- **SQLite Persistence & Automatic Migration**: Robust SQLite database persistence (`fashion_show.db`) with automatic one-time migration from legacy browser `localStorage`, ensuring browser storage is completely retired for fashion show data.
 
 ---
 
@@ -49,6 +48,7 @@ Heidi Boutique hosts runway fashion shows twice per year (such as Spring/Summer 
 | **Model Capacity** | Up to **5 models** per fashion show event. Models are identified by their first name and have dedicated backstage dressing notes. |
 | **Walk Order Sequence** | Models appear on the catwalk in the exact same designated sequence for each appearance (e.g. Model 1 $\rightarrow$ Model 2 $\rightarrow$ Model 3 $\rightarrow$ Model 4 $\rightarrow$ Model 5). Order can be adjusted via 1-click controls. |
 | **Catwalk Appearances** | Each model can walk the catwalk **up to 5 times** per show (configurable between 1 and 5 appearances). |
+| **Appearance Themes** | Each catwalk appearance (1 to 5) can have a custom theme title (e.g. *Appearance #1 Denim*, *Appearance #2 Leisureware*). Themes appear on outfit slots, run sequence headers, and reports. |
 | **Wardrobe per Appearance** | Enforced limits per catwalk appearance:<br>• Up to **4 items of clothing**<br>• Up to **4 items of jewellery**<br>• Up to **1 item of footwear** |
 | **Wardrobe Reusability** | Items of clothing, jewellery, and footwear are not restricted to one model or one appearance; any piece can be styled across multiple looks. |
 | **Retail Pricing & Currency** | Each wardrobe item carries a retail price (defaulting to GBP `£`), with support for custom currency symbols. |
@@ -125,7 +125,8 @@ For production deployment inside a Linux Container (LXC) on Debian 12 (Bookworm)
 ### 5. Backstage Staff Wardrobe Report
 - Click the **📋 Staff Wardrobe Report** tab.
 - Designed specifically for dressing assistants and backstage coordinators.
-- Displays each model in walk sequence order with their dresser notes and appearance-by-appearance breakdown.
+- Displays each model in walk sequence order with their dresser notes and appearance-by-appearance breakdown, with custom appearance themes highlighted (e.g. `CATWALK APPEARANCE #1 — DENIM`).
+- Header meta summary includes complete runway theme breakdown.
 - Each look contains an interactive checklist for clothing, jewellery, and footwear so dressers can verify items before the model walks the catwalk.
 - Use the **Filter by Model** dropdown to display all models or isolate a single model.
 - Click **🖨 Print Staff Report** to print physical dressing sheets.
@@ -133,12 +134,11 @@ For production deployment inside a Linux Container (LXC) on Debian 12 (Bookworm)
 ### 6. Customer Runway Programme & Lookbook
 - Click the **🏷️ Customer Lookbook** tab.
 - Designed for attendees, VIP clients, and retail buyers.
-- Organised by **Catwalk Appearance**, presenting models in strict walk order (`#1` to `#5`).
+- Organised by **Catwalk Appearance**, presenting custom theme titles in sequence banners (e.g. `Denim`, `Leisureware`).
 - Displays category badges, item descriptions, and individual retail prices.
+- Dropdown filter lists appearance runs with their corresponding theme names.
 - Automatically calculates:
-  - Individual **Look Totals**
-  - Catwalk **Sequence Valuations**
-  - **Grand Catalogue Valuation** and total pieces modelled.
+  - Individual **Look Totals** per model outfit.
 - Click **🖨 Print Customer Lookbook** to generate a clean client programme.
 
 ---
@@ -159,11 +159,18 @@ The application includes dedicated print styling ([css/print.css](css/print.css)
 
 ---
 
-## Data Storage, Export & Backup
+## Data Storage, SQLite Persistence & Migration
 
-- **Automatic Saving**: Every model addition, price modification, and outfit assignment is saved immediately to `localStorage`.
-- **Exporting Backups**: Click **⬇ Export** in the top bar to save all fashion shows, models, wardrobe items, and outfits to a timestamped `.json` file.
-- **Importing Backups**: Click **⬆ Import** to restore a saved JSON file or transfer data to another computer.
+- **SQLite Database Persistence**: All fashion shows, models, wardrobe catalogues, and outfit assignments are stored in a local SQLite relational database (`fashion_show.db`) using native `node:sqlite` (Node.js 22+).
+- **Automatic LocalStorage Migration**: On startup, the application automatically checks for legacy browser `localStorage` data (`fashion_show_manager_data_v2` and `v1`). If detected, it migrates all records into SQLite via `/api/migrate`, permanently purges the keys from `localStorage`, and displays a confirmation toast.
+- **LocalStorage Retired**: Browser `localStorage` is **strictly no longer used** for storing fashion show data, ensuring that all data persists reliably across browsers and devices.
+- **CLI Migration Utility**: Inspect or restore datasets via terminal:
+  ```powershell
+  node migrate.js                 # Display current SQLite database summary
+  node migrate.js backup.json     # Migrate a JSON backup directly into SQLite
+  node migrate.js --reset         # Reset SQLite to default initial luxury dataset
+  ```
+- **Exporting & Importing Backups**: Click **⬇ Export** in the top bar to save all shows and outfits to a `.json` backup file, or click **⬆ Import** to restore files directly into SQLite.
 
 ---
 
@@ -171,16 +178,20 @@ The application includes dedicated print styling ([css/print.css](css/print.css)
 
 ```text
 fashion-show-manager/
-├── .gitignore          # Git exclusion rules for OS, editors, logs, and temp data
+├── .gitignore          # Git exclusion rules for OS, editors, logs, and SQLite .db files
+├── package.json        # NPM project scripts (start, migrate, test)
 ├── index.html          # Main application interface and modal structures
-├── server.js           # Lightweight zero-dependency HTTP server (Node.js)
+├── server.js           # Node.js HTTP server with SQLite REST API & static file delivery
+├── db.js               # SQLite persistence layer, relational schema, and migration logic
+├── migrate.js          # CLI migration & database inspection utility
+├── test.js             # Automated integration and CRUD test suite
 ├── README.md           # Application documentation and user manual
 ├── TECHNICAL.md        # Technical architecture & Debian 12 LXC deployment guide
 ├── css/
-│   ├── main.css        # Rich luxury visual styling, dark glassmorphism, responsive grid
+│   ├── main.css        # Rich luxury styling, dark glassmorphism, responsive grid, DB status pill
 │   └── print.css       # Dedicated A4 print media stylesheet with clean page-breaks
 └── js/
-    ├── store.js        # Multi-show state manager, validation logic, limits enforcement, migration
+    ├── store.js        # Multi-show state manager with SQLite API sync & localStorage migration
     ├── reports.js      # HTML report generation engines (Staff Checklist & Customer Lookbook)
     └── app.js          # Interactive controllers, modal builders, inline price editing
 ```

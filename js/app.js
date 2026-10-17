@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const elements = {
     // Show Selector & Theme Toggle
     showSelect: document.getElementById('current-show-select'),
+    dbStatusPill: document.getElementById('db-status-pill'),
+    dbStatusText: document.getElementById('db-status-text'),
     btnNewShow: document.getElementById('btn-new-show'),
     btnManageShows: document.getElementById('btn-manage-shows'),
     btnThemeToggle: document.getElementById('btn-theme-toggle'),
@@ -39,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     modalOutfitBuilder: document.getElementById('modal-outfit-builder'),
     modalItemEdit: document.getElementById('modal-item-edit'),
     modalModelEdit: document.getElementById('modal-model-edit'),
+    modalThemeEdit: document.getElementById('modal-theme-edit'),
 
     // Overview Tab Elements
     showNameDisplay: document.getElementById('stat-show-name'),
@@ -48,6 +51,14 @@ document.addEventListener('DOMContentLoaded', () => {
     showValuationDisplay: document.getElementById('stat-valuation'),
     formShowDetails: document.getElementById('form-show-details'),
     walkOrderListPreview: document.getElementById('walk-order-list-preview'),
+    appearanceThemesList: document.getElementById('appearance-themes-inputs-list'),
+    newShowThemesList: document.getElementById('new-show-themes-inputs-list'),
+    inputEditAppearances: document.getElementById('edit-show-appearances'),
+    inputNewAppearances: document.getElementById('new-show-appearances'),
+    btnToggleEditThemes: document.getElementById('btn-toggle-edit-themes'),
+    btnToggleNewThemes: document.getElementById('btn-toggle-new-themes'),
+    editThemesCollapsible: document.getElementById('edit-show-themes-collapsible'),
+    newThemesCollapsible: document.getElementById('new-show-themes-collapsible'),
 
     // Models Tab
     modelsListContainer: document.getElementById('models-roster-list'),
@@ -78,11 +89,35 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // Initialization
   // ==========================================
-  function init() {
+  async function init() {
     initTheme();
     setupEventListeners();
+
+    // Initialize SQLite store and check for localStorage migration
+    await store.init();
+    activeShow = store.getActiveShow();
+    updateDbStatus();
     refreshShowDropdown();
     loadActiveShowData();
+
+    if (store.migratedFromLocalStorage) {
+      showToast('Successfully migrated legacy fashion show data from localStorage to SQLite!', 'success');
+    }
+  }
+
+  function updateDbStatus() {
+    if (!elements.dbStatusPill) return;
+    if (store.isSQLite) {
+      elements.dbStatusPill.classList.remove('disconnected');
+      elements.dbStatusPill.classList.add('connected');
+      if (elements.dbStatusText) elements.dbStatusText.textContent = 'SQLite Active';
+      elements.dbStatusPill.title = 'Storage: Connected to SQLite database (fashion_show.db)';
+    } else {
+      elements.dbStatusPill.classList.remove('connected');
+      elements.dbStatusPill.classList.add('disconnected');
+      if (elements.dbStatusText) elements.dbStatusText.textContent = 'SQLite Offline';
+      elements.dbStatusPill.title = 'Storage: Offline / In-Memory (Run `node server.js` to enable SQLite persistence)';
+    }
   }
 
   function initTheme() {
@@ -127,6 +162,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // New show button
     elements.btnNewShow.addEventListener('click', () => {
+      const collapsible = document.getElementById('new-show-themes-collapsible');
+      if (collapsible) collapsible.style.display = 'block';
+      const btn = document.getElementById('btn-toggle-new-themes');
+      if (btn) {
+        const icon = btn.querySelector('.toggle-icon');
+        if (icon) icon.textContent = '▾';
+        btn.setAttribute('aria-expanded', 'true');
+        btn.classList.remove('collapsed');
+      }
+      renderNewShowThemeInputs();
       openModal(elements.modalNewShow);
     });
 
@@ -237,13 +282,59 @@ document.addEventListener('DOMContentLoaded', () => {
         const currency = document.getElementById('new-show-currency').value;
         const appearances = document.getElementById('new-show-appearances').value;
 
-        const newShow = store.createShow({ name, season, year, date, venue, currency, catwalkAppearances: appearances });
+        const appearanceThemes = {};
+        const count = Math.min(5, Math.max(1, parseInt(appearances, 10) || 3));
+        for (let i = 1; i <= count; i++) {
+          const input = document.getElementById(`new-show-theme-input-${i}`);
+          if (input) {
+            appearanceThemes[i] = input.value.trim();
+          }
+        }
+
+        const newShow = store.createShow({ name, season, year, date, venue, currency, catwalkAppearances: appearances, appearanceThemes });
         activeShow = newShow;
         closeAllModals();
         refreshShowDropdown();
         refreshAllViews();
         showToast(`Created fashion show "${newShow.name}"`, 'success');
       });
+    }
+
+    // Form: Theme Edit
+    const formThemeEdit = document.getElementById('form-theme-edit');
+    if (formThemeEdit) {
+      formThemeEdit.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const appIndex = parseInt(document.getElementById('theme-edit-app-index').value, 10);
+        const themeName = document.getElementById('theme-edit-name').value.trim();
+        store.setAppearanceTheme(activeShow.id, appIndex, themeName);
+        activeShow = store.getActiveShow();
+        closeAllModals();
+        refreshAllViews();
+        showToast(`Appearance #${appIndex} theme set to "${themeName || 'Default'}"`, 'success');
+      });
+    }
+
+    // Dynamic appearance theme inputs listeners
+    if (elements.inputEditAppearances) {
+      elements.inputEditAppearances.addEventListener('input', renderAppearanceThemeInputs);
+      elements.inputEditAppearances.addEventListener('change', renderAppearanceThemeInputs);
+    }
+    if (elements.inputNewAppearances) {
+      elements.inputNewAppearances.addEventListener('input', renderNewShowThemeInputs);
+      elements.inputNewAppearances.addEventListener('change', renderNewShowThemeInputs);
+    }
+
+    // Toggle New Show Themes button
+    const btnToggleNewThemes = document.getElementById('btn-toggle-new-themes');
+    if (btnToggleNewThemes) {
+      btnToggleNewThemes.addEventListener('click', toggleNewThemes);
+    }
+
+    // Toggle Edit Show Themes button
+    const btnToggleEditThemes = document.getElementById('btn-toggle-edit-themes');
+    if (btnToggleEditThemes) {
+      btnToggleEditThemes.addEventListener('click', toggleEditThemes);
     }
 
     // Form: Item Edit/Add
@@ -360,6 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('edit-show-venue').value = activeShow.venue || '';
     document.getElementById('edit-show-currency').value = activeShow.currency || '£';
     document.getElementById('edit-show-appearances').value = activeShow.catwalkAppearances || 3;
+    renderAppearanceThemeInputs();
 
     // Render Walk Order Preview
     const models = store.getModels(activeShow.id);
@@ -384,11 +476,170 @@ document.addEventListener('DOMContentLoaded', () => {
         <p class="walk-order-rule-notice">
           ℹ️ <strong>Catwalk Sequence Rule:</strong> Models walk in this exact order (#1 to #${models.length}) for each of the ${activeShow.catwalkAppearances} catwalk appearances.
         </p>
+        <div class="themes-overview-bar" style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--border-subtle); display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+          <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: var(--text-dim); text-transform: uppercase;">Runway Themes:</span>
+          ${(() => {
+            const themePills = [];
+            for (let i = 1; i <= activeShow.catwalkAppearances; i++) {
+              const t = store.getAppearanceTheme(activeShow.id, i);
+              themePills.push(`
+                <span class="pill pill-gold pill-sm" style="cursor: pointer;" onclick="window.app.openThemeEditor(${i})" title="Click to edit theme for Appearance #${i}">
+                  #${i} ${escapeHtml(t || 'Untitled')} ✎
+                </span>
+              `);
+            }
+            return themePills.join('');
+          })()}
+        </div>
       `;
     }
   }
 
+  const THEME_PLACEHOLDERS = [
+    'e.g. Denim',
+    'e.g. Leisureware',
+    'e.g. Contemporary Tailoring',
+    'e.g. Draped Eveningwear',
+    'e.g. Grand Finale'
+  ];
+
+  let lastToggleEditTime = 0;
+  function toggleEditThemes(e) {
+    if (e) {
+      if (e.__themesHandled) return;
+      e.__themesHandled = true;
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    const now = Date.now();
+    if (now - lastToggleEditTime < 100) return;
+    lastToggleEditTime = now;
+
+    const collapsible = document.getElementById('edit-show-themes-collapsible');
+    const btn = document.getElementById('btn-toggle-edit-themes');
+    if (!collapsible || !btn) return;
+
+    const isHidden = collapsible.style.display === 'none' || window.getComputedStyle(collapsible).display === 'none';
+    const icon = btn.querySelector('.toggle-icon');
+
+    if (isHidden) {
+      collapsible.style.display = 'block';
+      if (icon) icon.textContent = '▾';
+      btn.setAttribute('aria-expanded', 'true');
+      btn.classList.remove('collapsed');
+      btn.title = 'Click to hide appearance themes';
+      renderAppearanceThemeInputs();
+      const firstInput = document.getElementById('theme-input-1');
+      if (firstInput) firstInput.focus();
+    } else {
+      collapsible.style.display = 'none';
+      if (icon) icon.textContent = '▸';
+      btn.setAttribute('aria-expanded', 'false');
+      btn.classList.add('collapsed');
+      btn.title = 'Click to show appearance themes';
+    }
+  }
+
+  let lastToggleNewTime = 0;
+  function toggleNewThemes(e) {
+    if (e) {
+      if (e.__themesHandled) return;
+      e.__themesHandled = true;
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    const now = Date.now();
+    if (now - lastToggleNewTime < 100) return;
+    lastToggleNewTime = now;
+
+    const collapsible = document.getElementById('new-show-themes-collapsible');
+    const btn = document.getElementById('btn-toggle-new-themes');
+    if (!collapsible || !btn) return;
+
+    const isHidden = collapsible.style.display === 'none' || window.getComputedStyle(collapsible).display === 'none';
+    const icon = btn.querySelector('.toggle-icon');
+
+    if (isHidden) {
+      collapsible.style.display = 'block';
+      if (icon) icon.textContent = '▾';
+      btn.setAttribute('aria-expanded', 'true');
+      btn.classList.remove('collapsed');
+      btn.title = 'Click to hide appearance themes';
+      renderNewShowThemeInputs();
+      const firstInput = document.getElementById('new-show-theme-input-1');
+      if (firstInput) firstInput.focus();
+    } else {
+      collapsible.style.display = 'none';
+      if (icon) icon.textContent = '▸';
+      btn.setAttribute('aria-expanded', 'false');
+      btn.classList.add('collapsed');
+      btn.title = 'Click to show appearance themes';
+    }
+  }
+
+  function renderAppearanceThemeInputs() {
+    if (!elements.appearanceThemesList) return;
+    activeShow = store.getActiveShow();
+    if (!activeShow) return;
+
+    const countInput = document.getElementById('edit-show-appearances');
+    const appearances = Math.min(5, Math.max(1, parseInt(countInput ? countInput.value : activeShow.catwalkAppearances, 10) || 3));
+
+    let html = '';
+    for (let i = 1; i <= appearances; i++) {
+      const currentVal = store.getAppearanceTheme(activeShow.id, i);
+      const placeholder = THEME_PLACEHOLDERS[i - 1] || `e.g. Theme #${i}`;
+      html += `
+        <div class="theme-input-row">
+          <label class="theme-index-label" for="theme-input-${i}">Appearance #${i}:</label>
+          <input type="text" id="theme-input-${i}" class="form-input theme-name-input" data-appearance="${i}"
+            placeholder="${placeholder}" value="${escapeHtml(currentVal)}">
+        </div>
+      `;
+    }
+    elements.appearanceThemesList.innerHTML = html;
+  }
+
+  function renderNewShowThemeInputs() {
+    if (!elements.newShowThemesList) return;
+    const countInput = document.getElementById('new-show-appearances');
+    const appearances = Math.min(5, Math.max(1, parseInt(countInput ? countInput.value : 3, 10) || 3));
+
+    let html = '';
+    for (let i = 1; i <= appearances; i++) {
+      const placeholder = THEME_PLACEHOLDERS[i - 1] || `e.g. Theme #${i}`;
+      html += `
+        <div class="theme-input-row">
+          <label class="theme-index-label" for="new-show-theme-input-${i}">Appearance #${i}:</label>
+          <input type="text" id="new-show-theme-input-${i}" class="form-input theme-name-input" data-appearance="${i}"
+            placeholder="${placeholder}" value="">
+        </div>
+      `;
+    }
+    elements.newShowThemesList.innerHTML = html;
+  }
+
+  function openThemeEditor(appIndex) {
+    activeShow = store.getActiveShow();
+    if (!activeShow) return;
+    const currentTheme = store.getAppearanceTheme(activeShow.id, appIndex);
+    document.getElementById('theme-edit-app-index').value = appIndex;
+    document.getElementById('theme-edit-name').value = currentTheme;
+    document.getElementById('modal-theme-title').textContent = `Edit Theme: Appearance #${appIndex}`;
+    document.getElementById('theme-edit-label').textContent = `Appearance #${appIndex} Theme Name`;
+    openModal(elements.modalThemeEdit);
+  }
+
   function saveShowDetails() {
+    const appearanceThemes = {};
+    const count = Math.min(5, Math.max(1, parseInt(document.getElementById('edit-show-appearances').value, 10) || 3));
+    for (let i = 1; i <= count; i++) {
+      const input = document.getElementById(`theme-input-${i}`);
+      if (input) {
+        appearanceThemes[i] = input.value.trim();
+      }
+    }
+
     const updates = {
       name: document.getElementById('edit-show-name').value,
       season: document.getElementById('edit-show-season').value,
@@ -396,7 +647,8 @@ document.addEventListener('DOMContentLoaded', () => {
       date: document.getElementById('edit-show-date').value,
       venue: document.getElementById('edit-show-venue').value,
       currency: document.getElementById('edit-show-currency').value,
-      catwalkAppearances: document.getElementById('edit-show-appearances').value
+      catwalkAppearances: document.getElementById('edit-show-appearances').value,
+      appearanceThemes
     };
 
     try {
@@ -807,6 +1059,7 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
       for (let appIdx = 1; appIdx <= totalAppearances; appIdx++) {
+        const theme = store.getAppearanceTheme(activeShow.id, appIdx);
         const assignment = store.getAssignment(activeShow.id, model.id, appIdx);
         const clothingItems = (assignment.clothingIds || []).map(id => store.getItemById(activeShow.id, id)).filter(Boolean);
         const jewelleryItems = (assignment.jewelleryIds || []).map(id => store.getItemById(activeShow.id, id)).filter(Boolean);
@@ -822,7 +1075,10 @@ document.addEventListener('DOMContentLoaded', () => {
         html += `
           <div class="catwalk-slot-card ${totalPieces === 0 ? 'slot-empty' : ''}">
             <div class="slot-header">
-              <div class="slot-title">Appearance #${appIdx}</div>
+              <div class="slot-title-group">
+                <div class="slot-title">Appearance #${appIdx}</div>
+                ${theme ? `<div class="slot-theme-pill" title="Appearance Theme: ${escapeHtml(theme)}" onclick="window.app.openThemeEditor(${appIdx})" style="cursor: pointer;">${escapeHtml(theme)} ✎</div>` : `<button type="button" class="btn btn-secondary btn-xs" style="margin-top: 2px;" onclick="window.app.openThemeEditor(${appIdx})">+ Add Theme</button>`}
+              </div>
               <div class="slot-look-cost">${reportsEngine.formatPrice(lookPrice, currency)}</div>
             </div>
 
@@ -905,14 +1161,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let html = `<div class="outfits-appearances-wrapper">`;
 
     for (let appIdx = 1; appIdx <= totalAppearances; appIdx++) {
+      const theme = store.getAppearanceTheme(activeShow.id, appIdx);
       html += `
         <div class="appearance-round-card">
           <div class="appearance-round-header">
             <div>
               <span class="round-kicker">Catwalk Sequence</span>
-              <h3 class="round-title">Appearance Run #${appIdx}</h3>
+              <h3 class="round-title">Appearance Run #${appIdx}${theme ? ` — ${escapeHtml(theme)}` : ''}</h3>
             </div>
-            <div class="round-badge-pill">Models walk in order #1 to #${models.length}</div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <button class="btn btn-secondary btn-xs" onclick="window.app.openThemeEditor(${appIdx})" title="Edit Theme for Appearance #${appIdx}">✎ Edit Theme</button>
+              <div class="round-badge-pill">Models walk in order #1 to #${models.length}</div>
+            </div>
           </div>
 
           <div class="round-models-grid">
@@ -973,8 +1233,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const titleEl = document.getElementById('builder-modal-title');
     const subtitleEl = document.getElementById('builder-modal-subtitle');
 
+    const theme = store.getAppearanceTheme(activeShow.id, appearanceIndex);
     titleEl.textContent = `Style Outfit: ${model.firstName}`;
-    subtitleEl.textContent = `Catwalk Appearance #${appearanceIndex} (Walk Order #${model.walkOrder})`;
+    subtitleEl.textContent = `Catwalk Appearance #${appearanceIndex}${theme ? ` — ${theme}` : ''} (Walk Order #${model.walkOrder})`;
 
     renderOutfitBuilderContent();
     openModal(modal);
@@ -1141,9 +1402,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Customer filter dropdown
     elements.customerAppearanceFilterSelect.innerHTML = `
       <option value="all">All Appearances (1 - ${totalAppearances})</option>
-      ${Array.from({ length: totalAppearances }, (_, i) => i + 1).map(n => `
-        <option value="${n}">Appearance #${n}</option>
-      `).join('')}
+      ${Array.from({ length: totalAppearances }, (_, i) => i + 1).map(n => {
+        const theme = store.getAppearanceTheme(activeShow.id, n);
+        return `<option value="${n}">Appearance #${n}${theme ? ` — ${escapeHtml(theme)}` : ''}</option>`;
+      }).join('')}
     `;
   }
 
@@ -1472,7 +1734,10 @@ document.addEventListener('DOMContentLoaded', () => {
           showToast(e.message, 'error');
         }
       }
-    }
+    },
+    openThemeEditor: (appIndex) => openThemeEditor(appIndex),
+    toggleEditThemes: (e) => toggleEditThemes(e),
+    toggleNewThemes: (e) => toggleNewThemes(e)
   };
 
   // Run start

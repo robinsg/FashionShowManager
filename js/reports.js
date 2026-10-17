@@ -79,6 +79,16 @@ class FashionReportsEngine {
               <div class="meta-item"><span class="meta-label">VENUE:</span> <span class="meta-val">${this.escapeHtml(show.venue || 'Main Catwalk Stage')}</span></div>
               <div class="meta-item"><span class="meta-label">DATE:</span> <span class="meta-val">${this.escapeHtml(this.formatUKDate(show.date))}</span></div>
               <div class="meta-item"><span class="meta-label">RUNS:</span> <span class="meta-val">${totalAppearances} Catwalk Appearances</span></div>
+              ${(() => {
+                const themeList = [];
+                for (let tIdx = 1; tIdx <= totalAppearances; tIdx++) {
+                  const t = this.store.getAppearanceTheme(show.id, tIdx);
+                  if (t) themeList.push(`#${tIdx} ${t}`);
+                }
+                return themeList.length > 0 
+                  ? `<div class="meta-item"><span class="meta-label">THEMES:</span> <span class="meta-val">${this.escapeHtml(themeList.join(' • '))}</span></div>`
+                  : '';
+              })()}
             </div>
           </div>
         </header>
@@ -102,6 +112,7 @@ class FashionReportsEngine {
       `;
 
       for (let appIdx = 1; appIdx <= totalAppearances; appIdx++) {
+        const theme = this.store.getAppearanceTheme(show.id, appIdx);
         const assignment = this.store.getAssignment(show.id, model.id, appIdx);
         const clothingItems = (assignment.clothingIds || []).map(id => this.store.getItemById(show.id, id)).filter(Boolean);
         const jewelleryItems = (assignment.jewelleryIds || []).map(id => this.store.getItemById(show.id, id)).filter(Boolean);
@@ -114,7 +125,7 @@ class FashionReportsEngine {
             <div class="appearance-block-header">
               <div class="appearance-number">
                 <span class="app-icon">✦</span>
-                CATWALK APPEARANCE #${appIdx}
+                CATWALK APPEARANCE #${appIdx}${theme ? ` — <span class="theme-name">${this.escapeHtml(theme.toUpperCase())}</span>` : ''}
               </div>
               <div class="appearance-count-pill">${totalItemsCount} Total Items Worn</div>
             </div>
@@ -235,9 +246,6 @@ class FashionReportsEngine {
       }
     }
 
-    let grandTotalRetailValue = 0;
-    let grandTotalPieces = 0;
-
     let html = `
       <div class="report-document customer-report-theme" id="printable-customer-report">
         <!-- Luxury Lookbook Cover / Header -->
@@ -254,8 +262,6 @@ class FashionReportsEngine {
             <span><strong>Date:</strong> ${this.escapeHtml(this.formatUKDate(show.date))}</span>
             <span>•</span>
             <span><strong>Location:</strong> ${this.escapeHtml(show.venue || 'Runway Hall')}</span>
-            <span>•</span>
-            <span><strong>Enquiries:</strong> Client Concierge & VIP Dressing</span>
           </div>
         </header>
 
@@ -263,8 +269,7 @@ class FashionReportsEngine {
     `;
 
     appIndices.forEach(appIdx => {
-      let appearanceTotalValue = 0;
-      let appearancePieceCount = 0;
+      const theme = this.store.getAppearanceTheme(show.id, appIdx);
 
       let modelsRowsHtml = '';
 
@@ -297,16 +302,10 @@ class FashionReportsEngine {
           modelPiecesCount++;
         }
 
-        appearanceTotalValue += modelLookTotal;
-        appearancePieceCount += modelPiecesCount;
-        grandTotalRetailValue += modelLookTotal;
-        grandTotalPieces += modelPiecesCount;
-
         modelsRowsHtml += `
           <div class="customer-model-entry">
             <div class="model-entry-header">
               <div class="model-lead">
-                <span class="walk-order-tag">Order #${model.walkOrder}</span>
                 <h3 class="model-heading">${this.escapeHtml(model.firstName)}</h3>
               </div>
               <div class="model-look-total">
@@ -343,18 +342,7 @@ class FashionReportsEngine {
         <section class="catwalk-appearance-section print-page-break">
           <div class="appearance-section-banner">
             <div class="banner-title-area">
-              <span class="run-kicker">Catwalk Sequence</span>
-              <h2 class="appearance-title">Catwalk Appearance #${appIdx}</h2>
-            </div>
-            <div class="appearance-stats-box">
-              <div class="stat-bubble">
-                <span class="stat-number">${appearancePieceCount}</span>
-                <span class="stat-text">Pieces Modelled</span>
-              </div>
-              <div class="stat-bubble">
-                <span class="stat-number">${this.formatPrice(appearanceTotalValue, currency)}</span>
-                <span class="stat-text">Sequence Value</span>
-              </div>
+              <h2 class="appearance-title">${this.escapeHtml(theme || '')}</h2>
             </div>
           </div>
 
@@ -367,31 +355,6 @@ class FashionReportsEngine {
 
     html += `
         </div>
-
-        <!-- Overall Summary Banner for Buyers / VIPs -->
-        <section class="customer-grand-summary">
-          <div class="summary-card">
-            <div class="summary-col">
-              <span class="summary-label">TOTAL CATWALK PIECES</span>
-              <span class="summary-number">${grandTotalPieces}</span>
-            </div>
-            <div class="summary-col">
-              <span class="summary-label">MODELS ON RUNWAY</span>
-              <span class="summary-number">${models.length}</span>
-            </div>
-            <div class="summary-col highlight-col">
-              <span class="summary-label">CATALOGUE RETAIL VALUATION</span>
-              <span class="summary-number big-number">${this.formatPrice(grandTotalRetailValue, currency)}</span>
-            </div>
-          </div>
-          <p class="summary-disclaimer">
-            * All retail prices are subject to seasonal collection availability and custom fitting terms. Please speak with VIP Private Client Advisors to place order reservations.
-          </p>
-        </section>
-
-        <footer class="report-footer">
-          <p>© ${show.year} ${this.escapeHtml(show.name)} // Official Attendee Catalogue & Retail Order Guide</p>
-        </footer>
       </div>
     `;
 

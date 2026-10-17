@@ -211,6 +211,11 @@
     font-weight: 700 !important;
   }
 
+  .theme-name {
+    color: #111111 !important;
+    font-weight: 700 !important;
+  }
+
   .app-icon {
     display: none !important;
   }
