@@ -235,9 +235,6 @@ class FashionReportsEngine {
       }
     }
 
-    let grandTotalRetailValue = 0;
-    let grandTotalPieces = 0;
-
     let html = `
       <div class="report-document customer-report-theme" id="printable-customer-report">
         <!-- Luxury Lookbook Cover / Header -->
@@ -254,8 +251,6 @@ class FashionReportsEngine {
             <span><strong>Date:</strong> ${this.escapeHtml(this.formatUKDate(show.date))}</span>
             <span>•</span>
             <span><strong>Location:</strong> ${this.escapeHtml(show.venue || 'Runway Hall')}</span>
-            <span>•</span>
-            <span><strong>Enquiries:</strong> Client Concierge & VIP Dressing</span>
           </div>
         </header>
 
@@ -299,14 +294,11 @@ class FashionReportsEngine {
 
         appearanceTotalValue += modelLookTotal;
         appearancePieceCount += modelPiecesCount;
-        grandTotalRetailValue += modelLookTotal;
-        grandTotalPieces += modelPiecesCount;
 
         modelsRowsHtml += `
           <div class="customer-model-entry">
             <div class="model-entry-header">
               <div class="model-lead">
-                <span class="walk-order-tag">Order #${model.walkOrder}</span>
                 <h3 class="model-heading">${this.escapeHtml(model.firstName)}</h3>
               </div>
               <div class="model-look-total">
@@ -344,7 +336,7 @@ class FashionReportsEngine {
           <div class="appearance-section-banner">
             <div class="banner-title-area">
               <span class="run-kicker">Catwalk Sequence</span>
-              <h2 class="appearance-title">Catwalk Appearance #${appIdx}</h2>
+              <h2 class="appearance-title">Fashion Theme</h2>
             </div>
             <div class="appearance-stats-box">
               <div class="stat-bubble">
@@ -367,31 +359,6 @@ class FashionReportsEngine {
 
     html += `
         </div>
-
-        <!-- Overall Summary Banner for Buyers / VIPs -->
-        <section class="customer-grand-summary">
-          <div class="summary-card">
-            <div class="summary-col">
-              <span class="summary-label">TOTAL CATWALK PIECES</span>
-              <span class="summary-number">${grandTotalPieces}</span>
-            </div>
-            <div class="summary-col">
-              <span class="summary-label">MODELS ON RUNWAY</span>
-              <span class="summary-number">${models.length}</span>
-            </div>
-            <div class="summary-col highlight-col">
-              <span class="summary-label">CATALOGUE RETAIL VALUATION</span>
-              <span class="summary-number big-number">${this.formatPrice(grandTotalRetailValue, currency)}</span>
-            </div>
-          </div>
-          <p class="summary-disclaimer">
-            * All retail prices are subject to seasonal collection availability and custom fitting terms. Please speak with VIP Private Client Advisors to place order reservations.
-          </p>
-        </section>
-
-        <footer class="report-footer">
-          <p>© ${show.year} ${this.escapeHtml(show.name)} // Official Attendee Catalogue & Retail Order Guide</p>
-        </footer>
       </div>
     `;
 
