@@ -25,12 +25,12 @@ This document provides complete technical specifications, architecture notes, an
 ## 1. Architecture Overview
 
 ### 1.1 Application Topology
-The Heidi Boutique Fashion Show Manager is an ultra-lean, client-first single page web application:
+The Heidi Boutique Fashion Show Manager is an ultra-lean, high-performance web application backed by an embedded SQLite database engine:
 - **Presentation Layer**: HTML5 semantic markup, CSS3 styling (`main.css`), and dedicated page-break optimized print stylesheet (`print.css`).
-- **Logic & Execution Layer**: Vanilla ECMAScript 2020 modules (`store.js`, `reports.js`, `app.js`).
-- **Data Persistence**: Client-side browser `localStorage` with full JSON schema serialization, export, and import capabilities.
-- **Backend Requirements**: Zero database servers (PostgreSQL/MySQL/Redis are **not** needed). Any static HTTP server or minimal Node.js runtime can host the application.
-- **Dependencies**: 0 external npm packages, 0 CDN script dependencies, 0 build steps.
+- **Logic & Execution Layer**: Vanilla ECMAScript modules (`store.js`, `reports.js`, `app.js`).
+- **Data Persistence**: Embedded **SQLite relational database** (`fashion_show.db`) with Write-Ahead Logging (WAL) and foreign keys enabled, powered natively by Node.js 22+ (`node:sqlite`). Browser `localStorage` is completely retired for fashion show data after automatic first-run migration.
+- **Backend Architecture**: High-speed Node.js HTTP server (`server.js`) providing static asset delivery and a clean JSON REST API (`/api/data`, `/api/migrate`, `/api/shows`, `/api/active-show`, etc.).
+- **Dependencies**: 0 external npm packages, 0 CDN script dependencies, 0 build steps. Native standard-library SQLite.
 
 ```
                     ┌────────────────────────────────────────────────────────┐
@@ -39,13 +39,13 @@ The Heidi Boutique Fashion Show Manager is an ultra-lean, client-first single pa
                     │   ┌────────────────────────────────────────────────┐   │
                     │   │       Debian 12 LXC Guest (Unprivileged)       │   │
                     │   │                                                │   │
-Client Browser ────►│──►│ [Port 80/443] Nginx Web Server (Static Engine) │   │
+Client Browser ────►│──►│ [Port 3000] Node.js Service (server.js)        │   │
+                    │   │       │                                        │   │
+                    │   │       ├── Static Assets (HTML / CSS / JS)      │   │
+                    │   │       ├── REST API (/api/data, /api/migrate)   │   │
                     │   │       │                                        │   │
                     │   │       ▼                                        │   │
-                    │   │ Document Root: /var/www/fashion-show-manager   │   │
-                    │   │   ├── index.html                               │   │
-                    │   │   ├── css/ (main.css, print.css)               │   │
-                    │   │   └── js/ (app.js, store.js, reports.js)       │   │
+                    │   │ Embedded SQLite Database (fashion_show.db)     │   │
                     │   └────────────────────────────────────────────────┘   │
                     └────────────────────────────────────────────────────────┘
 ```

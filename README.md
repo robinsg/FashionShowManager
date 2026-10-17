@@ -36,8 +36,7 @@ Heidi Boutique hosts runway fashion shows twice per year (such as Spring/Summer 
 - **Live Inline Retail Price Updates**: Modify prices directly in the catalogue table with instant re-calculation across look totals and reports.
 - **Dedicated Printable Reports**:
   1. **Backstage Staff Wardrobe Report**: Organised by model, featuring item checklists and dresser notes for backstage helpers.
-  2. **Customer Runway Programme**: Organised by catwalk appearance, in walk order, displaying modelled pieces and retail prices for buyers and attendees.
-- **Local Persistence & JSON Portability**: Automatic browser `localStorage` saving, with full JSON file export and import.
+- **SQLite Persistence & Automatic Migration**: Robust SQLite database persistence (`fashion_show.db`) with automatic one-time migration from legacy browser `localStorage`, ensuring browser storage is completely retired for fashion show data.
 
 ---
 
@@ -159,11 +158,18 @@ The application includes dedicated print styling ([css/print.css](css/print.css)
 
 ---
 
-## Data Storage, Export & Backup
+## Data Storage, SQLite Persistence & Migration
 
-- **Automatic Saving**: Every model addition, price modification, and outfit assignment is saved immediately to `localStorage`.
-- **Exporting Backups**: Click **⬇ Export** in the top bar to save all fashion shows, models, wardrobe items, and outfits to a timestamped `.json` file.
-- **Importing Backups**: Click **⬆ Import** to restore a saved JSON file or transfer data to another computer.
+- **SQLite Database Persistence**: All fashion shows, models, wardrobe catalogues, and outfit assignments are stored in a local SQLite relational database (`fashion_show.db`) using native `node:sqlite` (Node.js 22+).
+- **Automatic LocalStorage Migration**: On startup, the application automatically checks for legacy browser `localStorage` data (`fashion_show_manager_data_v2` and `v1`). If detected, it migrates all records into SQLite via `/api/migrate`, permanently purges the keys from `localStorage`, and displays a confirmation toast.
+- **LocalStorage Retired**: Browser `localStorage` is **strictly no longer used** for storing fashion show data, ensuring that all data persists reliably across browsers and devices.
+- **CLI Migration Utility**: Inspect or restore datasets via terminal:
+  ```powershell
+  node migrate.js                 # Display current SQLite database summary
+  node migrate.js backup.json     # Migrate a JSON backup directly into SQLite
+  node migrate.js --reset         # Reset SQLite to default initial luxury dataset
+  ```
+- **Exporting & Importing Backups**: Click **⬇ Export** in the top bar to save all shows and outfits to a `.json` backup file, or click **⬆ Import** to restore files directly into SQLite.
 
 ---
 
@@ -171,16 +177,20 @@ The application includes dedicated print styling ([css/print.css](css/print.css)
 
 ```text
 fashion-show-manager/
-├── .gitignore          # Git exclusion rules for OS, editors, logs, and temp data
+├── .gitignore          # Git exclusion rules for OS, editors, logs, and SQLite .db files
+├── package.json        # NPM project scripts (start, migrate, test)
 ├── index.html          # Main application interface and modal structures
-├── server.js           # Lightweight zero-dependency HTTP server (Node.js)
+├── server.js           # Node.js HTTP server with SQLite REST API & static file delivery
+├── db.js               # SQLite persistence layer, relational schema, and migration logic
+├── migrate.js          # CLI migration & database inspection utility
+├── test.js             # Automated integration and CRUD test suite
 ├── README.md           # Application documentation and user manual
 ├── TECHNICAL.md        # Technical architecture & Debian 12 LXC deployment guide
 ├── css/
-│   ├── main.css        # Rich luxury visual styling, dark glassmorphism, responsive grid
+│   ├── main.css        # Rich luxury styling, dark glassmorphism, responsive grid, DB status pill
 │   └── print.css       # Dedicated A4 print media stylesheet with clean page-breaks
 └── js/
-    ├── store.js        # Multi-show state manager, validation logic, limits enforcement, migration
+    ├── store.js        # Multi-show state manager with SQLite API sync & localStorage migration
     ├── reports.js      # HTML report generation engines (Staff Checklist & Customer Lookbook)
     └── app.js          # Interactive controllers, modal builders, inline price editing
 ```

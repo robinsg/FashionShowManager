@@ -88,3 +88,14 @@ coverage/
 # ----------------------------------------
 *.backup.json
 *fashion-show-export*.json
+
+# SQLite Database Files
+# ---------------------
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+test_*.db
+.server.pid

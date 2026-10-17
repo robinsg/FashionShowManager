@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const elements = {
     // Show Selector & Theme Toggle
     showSelect: document.getElementById('current-show-select'),
+    dbStatusPill: document.getElementById('db-status-pill'),
+    dbStatusText: document.getElementById('db-status-text'),
     btnNewShow: document.getElementById('btn-new-show'),
     btnManageShows: document.getElementById('btn-manage-shows'),
     btnThemeToggle: document.getElementById('btn-theme-toggle'),
@@ -78,11 +80,35 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // Initialization
   // ==========================================
-  function init() {
+  async function init() {
     initTheme();
     setupEventListeners();
+
+    // Initialize SQLite store and check for localStorage migration
+    await store.init();
+    activeShow = store.getActiveShow();
+    updateDbStatus();
     refreshShowDropdown();
     loadActiveShowData();
+
+    if (store.migratedFromLocalStorage) {
+      showToast('Successfully migrated legacy fashion show data from localStorage to SQLite!', 'success');
+    }
+  }
+
+  function updateDbStatus() {
+    if (!elements.dbStatusPill) return;
+    if (store.isSQLite) {
+      elements.dbStatusPill.classList.remove('disconnected');
+      elements.dbStatusPill.classList.add('connected');
+      if (elements.dbStatusText) elements.dbStatusText.textContent = 'SQLite Active';
+      elements.dbStatusPill.title = 'Storage: Connected to SQLite database (fashion_show.db)';
+    } else {
+      elements.dbStatusPill.classList.remove('connected');
+      elements.dbStatusPill.classList.add('disconnected');
+      if (elements.dbStatusText) elements.dbStatusText.textContent = 'SQLite Offline';
+      elements.dbStatusPill.title = 'Storage: Offline / In-Memory (Run `node server.js` to enable SQLite persistence)';
+    }
   }
 
   function initTheme() {
