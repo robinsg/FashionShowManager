@@ -134,13 +134,11 @@ For production deployment inside a Linux Container (LXC) on Debian 12 (Bookworm)
 ### 6. Customer Runway Programme & Lookbook
 - Click the **🏷️ Customer Lookbook** tab.
 - Designed for attendees, VIP clients, and retail buyers.
-- Organised by **Catwalk Appearance**, presenting custom theme titles in sequence banners (e.g. `Appearance #1 — Denim`, `Appearance #2 — Leisureware`).
+- Organised by **Catwalk Appearance**, presenting custom theme titles in sequence banners (e.g. `Denim`, `Leisureware`).
 - Displays category badges, item descriptions, and individual retail prices.
 - Dropdown filter lists appearance runs with their corresponding theme names.
 - Automatically calculates:
-  - Individual **Look Totals**
-  - Catwalk **Sequence Valuations**
-  - **Grand Catalogue Valuation** and total pieces modelled.
+  - Individual **Look Totals** per model outfit.
 - Click **🖨 Print Customer Lookbook** to generate a clean client programme.
 
 ---

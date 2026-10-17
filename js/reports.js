@@ -270,8 +270,6 @@ class FashionReportsEngine {
 
     appIndices.forEach(appIdx => {
       const theme = this.store.getAppearanceTheme(show.id, appIdx);
-      let appearanceTotalValue = 0;
-      let appearancePieceCount = 0;
 
       let modelsRowsHtml = '';
 
@@ -303,9 +301,6 @@ class FashionReportsEngine {
           modelLookTotal += footwearItem.price;
           modelPiecesCount++;
         }
-
-        appearanceTotalValue += modelLookTotal;
-        appearancePieceCount += modelPiecesCount;
 
         modelsRowsHtml += `
           <div class="customer-model-entry">
@@ -347,18 +342,7 @@ class FashionReportsEngine {
         <section class="catwalk-appearance-section print-page-break">
           <div class="appearance-section-banner">
             <div class="banner-title-area">
-              <span class="run-kicker">Catwalk Sequence • Appearance #${appIdx}</span>
-              <h2 class="appearance-title">Appearance #${appIdx}${theme ? ` — ${this.escapeHtml(theme)}` : ''}</h2>
-            </div>
-            <div class="appearance-stats-box">
-              <div class="stat-bubble">
-                <span class="stat-number">${appearancePieceCount}</span>
-                <span class="stat-text">Pieces Modelled</span>
-              </div>
-              <div class="stat-bubble">
-                <span class="stat-number">${this.formatPrice(appearanceTotalValue, currency)}</span>
-                <span class="stat-text">Sequence Value</span>
-              </div>
+              <h2 class="appearance-title">${this.escapeHtml(theme || '')}</h2>
             </div>
           </div>
 
