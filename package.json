@@ -1,0 +1,24 @@
+{
+  "name": "fashion-show-manager",
+  "version": "2.0.0",
+  "description": "Heidi Boutique Fashion Show Runway & Wardrobe Management System with SQLite Persistence",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "stop": "node stop.js",
+    "migrate": "node migrate.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "fashion-show",
+    "runway",
+    "wardrobe-management",
+    "sqlite",
+    "retail-catalogue"
+  ],
+  "author": "Heidi Boutique",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

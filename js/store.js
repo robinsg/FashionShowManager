@@ -1,6 +1,6 @@
 /**
  * Atelier Runway & Wardrobe Management System
- * Data Store & Persistence Manager
+ * Data Store & Persistence Manager with SQLite Engine Integration
  */
 
 const STORAGE_KEY = 'fashion_show_manager_data_v2';
@@ -116,68 +116,189 @@ const DEFAULT_INITIAL_DATA = {
   ]
 };
 
+function getApiUrl(endpoint) {
+  if (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null' && window.location.origin !== 'file://') {
+    return endpoint;
+  }
+  const port = (typeof process !== 'undefined' && process.env && process.env.PORT) || 3000;
+  return `http://127.0.0.1:${port}${endpoint}`;
+}
+
 class FashionShowStore {
   constructor() {
-    this.data = this.loadData();
+    // Initial in-memory state while asynchronous SQLite connection initializes
+    this.data = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA));
+    this.isSQLite = false;
+    this.isReady = false;
+    this.migratedFromLocalStorage = false;
+    this.listeners = [];
   }
 
-  loadData() {
+  /**
+   * Initialize store:
+   * 1. Check for legacy localStorage data.
+   * 2. If legacy data exists, migrate it to the SQLite database via POST /api/migrate.
+   * 3. Clear legacy fashion show keys from localStorage (localStorage is NO LONGER USED for fashion show data).
+   * 4. Load full dataset from SQLite via GET /api/data.
+   */
+  async init() {
+    await this.checkForLocalStorageMigration();
+    await this.loadFromSQLite();
+    this.isReady = true;
+    this.notifyListeners();
+    return this.data;
+  }
+
+  /**
+   * Migrate existing localStorage data to SQLite and purge from localStorage
+   */
+  async checkForLocalStorageMigration() {
     try {
-      // Check v2 storage
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && Array.isArray(parsed.shows) && parsed.shows.length > 0) {
-          return parsed;
+      let legacyPayload = null;
+
+      // Check for v2 localStorage
+      const storedV2 = localStorage.getItem(STORAGE_KEY);
+      if (storedV2) {
+        try {
+          const parsed = JSON.parse(storedV2);
+          if (parsed && Array.isArray(parsed.shows) && parsed.shows.length > 0) {
+            legacyPayload = parsed;
+          }
+        } catch (e) {
+          console.warn('[Store] Failed to parse localStorage v2 data:', e);
         }
       }
 
-      // Migrate from v1 if present
-      const oldStored = localStorage.getItem(OLD_STORAGE_KEY);
-      if (oldStored) {
-        let migratedStr = oldStored
-          .replace(/Pre-Fall/g, 'Pre-Autumn')
-          .replace(/Tuxedo Vest/g, 'Tuxedo Waistcoat');
-        const parsedMigrated = JSON.parse(migratedStr);
-        if (parsedMigrated && Array.isArray(parsedMigrated.shows)) {
-          this.saveData(parsedMigrated);
-          localStorage.removeItem(OLD_STORAGE_KEY);
-          return parsedMigrated;
+      // Check for v1 localStorage if v2 was not found
+      if (!legacyPayload) {
+        const storedV1 = localStorage.getItem(OLD_STORAGE_KEY);
+        if (storedV1) {
+          try {
+            let migratedStr = storedV1
+              .replace(/Pre-Fall/g, 'Pre-Autumn')
+              .replace(/Tuxedo Vest/g, 'Tuxedo Waistcoat');
+            const parsed = JSON.parse(migratedStr);
+            if (parsed && Array.isArray(parsed.shows) && parsed.shows.length > 0) {
+              legacyPayload = parsed;
+            }
+          } catch (e) {
+            console.warn('[Store] Failed to parse localStorage v1 data:', e);
+          }
+        }
+      }
+
+      // If legacy localStorage data exists, migrate to SQLite API
+      if (legacyPayload) {
+        console.log('[Store] Found legacy fashion show data in localStorage. Migrating to SQLite...');
+        const res = await fetch(getApiUrl('/api/migrate'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(legacyPayload)
+        });
+
+        if (res.ok) {
+          const result = await res.json();
+          if (result.success) {
+            this.migratedFromLocalStorage = true;
+            console.log(`[Store] Successfully migrated ${result.showsCount} shows to SQLite.`);
+          }
+        } else {
+          console.error('[Store] Server returned error during localStorage migration:', res.status);
+        }
+      }
+
+      // ENSURE localStorage is NO LONGER used: permanently purge fashion show keys
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(OLD_STORAGE_KEY);
+    } catch (e) {
+      console.warn('[Store] Error during localStorage migration check:', e);
+      // Clean up keys even in failure to prevent recurring issues
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(OLD_STORAGE_KEY);
+      } catch (err) {}
+    }
+  }
+
+  /**
+   * Fetch current application state from SQLite database
+   */
+  async loadFromSQLite() {
+    try {
+      const res = await fetch(getApiUrl('/api/data'));
+      if (res.ok) {
+        const dbData = await res.json();
+        if (dbData && Array.isArray(dbData.shows) && dbData.shows.length > 0) {
+          this.data = dbData;
+          this.isSQLite = true;
+          console.log(`[Store] SQLite connected. Active show: "${dbData.activeShowId}", Shows: ${dbData.shows.length}`);
+          return this.data;
         }
       }
     } catch (e) {
-      console.warn('Failed to parse stored fashion show data, loading initial demo data.', e);
+      console.warn('[Store] Could not load data from SQLite backend API. Working in memory.', e);
+      this.isSQLite = false;
     }
-    this.saveData(DEFAULT_INITIAL_DATA);
-    return JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA));
+    return this.data;
   }
 
-  saveData(dataToSave = null) {
+  /**
+   * Persist data to SQLite database.
+   * NOTE: localStorage is strictly NOT used for fashion show data.
+   */
+  async saveData(dataToSave = null) {
     if (dataToSave) {
       this.data = dataToSave;
     }
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
-    } catch (e) {
-      console.error('Failed to write to localStorage', e);
+
+    if (this.isSQLite) {
+      try {
+        const res = await fetch(getApiUrl('/api/data'), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.data)
+        });
+        if (!res.ok) {
+          console.error('[Store] SQLite save returned status:', res.status);
+        }
+      } catch (e) {
+        console.error('[Store] Failed to write to SQLite database:', e);
+      }
     }
+
+    this.notifyListeners();
+  }
+
+  subscribe(listener) {
+    if (typeof listener === 'function') {
+      this.listeners.push(listener);
+    }
+  }
+
+  notifyListeners() {
+    this.listeners.forEach(fn => {
+      try { fn(this.data); } catch (e) { console.error(e); }
+    });
   }
 
   // --- Show Management ---
 
   getShowsList() {
-    return this.data.shows.map(s => ({
+    return (this.data.shows || []).map(s => ({
       id: s.id,
       name: s.name,
       season: s.season,
       year: s.year,
       date: s.date,
       appearances: s.catwalkAppearances,
-      modelsCount: s.models.length
+      modelsCount: (s.models || []).length
     }));
   }
 
   getActiveShow() {
+    if (!this.data.shows || this.data.shows.length === 0) {
+      return null;
+    }
     let show = this.data.shows.find(s => s.id === this.data.activeShowId);
     if (!show && this.data.shows.length > 0) {
       this.data.activeShowId = this.data.shows[0].id;
@@ -191,6 +312,13 @@ class FashionShowStore {
     if (exists) {
       this.data.activeShowId = showId;
       this.saveData();
+      if (this.isSQLite) {
+        fetch(getApiUrl('/api/active-show'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ showId })
+        }).catch(err => console.error(err));
+      }
       return exists;
     }
     return null;
@@ -267,7 +395,7 @@ class FashionShowStore {
 
   getModels(showId = null) {
     const show = showId ? this.data.shows.find(s => s.id === showId) : this.getActiveShow();
-    if (!show) return [];
+    if (!show || !show.models) return [];
     // Ensure sorted by walkOrder
     return [...show.models].sort((a, b) => a.walkOrder - b.walkOrder);
   }
@@ -313,7 +441,6 @@ class FashionShowStore {
     }
     if (updates.walkOrder !== undefined) {
       model.walkOrder = parseInt(updates.walkOrder, 10);
-      // Re-normalize walk orders
       this.normalizeWalkOrders(show);
     }
 
@@ -329,11 +456,13 @@ class FashionShowStore {
     this.normalizeWalkOrders(show);
 
     // Clean up assignments for this model
-    Object.keys(show.assignments).forEach(key => {
-      if (key.startsWith(`${modelId}_`)) {
-        delete show.assignments[key];
-      }
-    });
+    if (show.assignments) {
+      Object.keys(show.assignments).forEach(key => {
+        if (key.startsWith(`${modelId}_`)) {
+          delete show.assignments[key];
+        }
+      });
+    }
 
     this.saveData();
     return true;
@@ -377,7 +506,7 @@ class FashionShowStore {
   getItemById(showId, itemId) {
     const show = showId ? this.data.shows.find(s => s.id === showId) : this.getActiveShow();
     if (!show) return null;
-    return show.items.find(i => i.id === itemId) || null;
+    return (show.items || []).find(i => i.id === itemId) || null;
   }
 
   addItem(showId, { name, category, price }) {
@@ -403,6 +532,7 @@ class FashionShowStore {
       price: Math.round(parsedPrice * 100) / 100
     };
 
+    if (!show.items) show.items = [];
     show.items.push(newItem);
     this.saveData();
     return newItem;
@@ -410,7 +540,7 @@ class FashionShowStore {
 
   updateItem(showId, itemId, updates) {
     const show = showId ? this.data.shows.find(s => s.id === showId) : this.getActiveShow();
-    if (!show) return null;
+    if (!show || !show.items) return null;
 
     const item = show.items.find(i => i.id === itemId);
     if (!item) return null;
@@ -434,22 +564,24 @@ class FashionShowStore {
 
   deleteItem(showId, itemId) {
     const show = showId ? this.data.shows.find(s => s.id === showId) : this.getActiveShow();
-    if (!show) return false;
+    if (!show || !show.items) return false;
 
     show.items = show.items.filter(i => i.id !== itemId);
 
     // Remove from assignments if assigned anywhere
-    Object.values(show.assignments).forEach(assignment => {
-      if (assignment.clothingIds) {
-        assignment.clothingIds = assignment.clothingIds.filter(id => id !== itemId);
-      }
-      if (assignment.jewelleryIds) {
-        assignment.jewelleryIds = assignment.jewelleryIds.filter(id => id !== itemId);
-      }
-      if (assignment.footwearId === itemId) {
-        assignment.footwearId = null;
-      }
-    });
+    if (show.assignments) {
+      Object.values(show.assignments).forEach(assignment => {
+        if (assignment.clothingIds) {
+          assignment.clothingIds = assignment.clothingIds.filter(id => id !== itemId);
+        }
+        if (assignment.jewelleryIds) {
+          assignment.jewelleryIds = assignment.jewelleryIds.filter(id => id !== itemId);
+        }
+        if (assignment.footwearId === itemId) {
+          assignment.footwearId = null;
+        }
+      });
+    }
 
     this.saveData();
     return true;
@@ -457,7 +589,7 @@ class FashionShowStore {
 
   getItemUsageCount(showId, itemId) {
     const show = showId ? this.data.shows.find(s => s.id === showId) : this.getActiveShow();
-    if (!show) return 0;
+    if (!show || !show.assignments) return 0;
 
     let count = 0;
     Object.values(show.assignments).forEach(ass => {
@@ -476,7 +608,7 @@ class FashionShowStore {
 
   getAssignment(showId, modelId, appearanceIndex) {
     const show = showId ? this.data.shows.find(s => s.id === showId) : this.getActiveShow();
-    if (!show) return { clothingIds: [], jewelleryIds: [], footwearId: null };
+    if (!show || !show.assignments) return { clothingIds: [], jewelleryIds: [], footwearId: null };
 
     const key = this.getAssignmentKey(modelId, appearanceIndex);
     const existing = show.assignments[key];
@@ -490,13 +622,6 @@ class FashionShowStore {
     return { clothingIds: [], jewelleryIds: [], footwearId: null };
   }
 
-  /**
-   * Assign or update an outfit for a model in a specific catwalk appearance.
-   * Enforces rules:
-   * - Max 4 clothing items
-   * - Max 4 jewellery items
-   * - Max 1 footwear item
-   */
   setAssignment(showId, modelId, appearanceIndex, { clothingIds = [], jewelleryIds = [], footwearId = null }) {
     const show = showId ? this.data.shows.find(s => s.id === showId) : this.getActiveShow();
     if (!show) throw new Error('Show not found');
@@ -505,11 +630,11 @@ class FashionShowStore {
       throw new Error(`Appearance index must be between 1 and ${show.catwalkAppearances}`);
     }
 
-    // Validate limits
     const validClothing = (clothingIds || []).slice(0, 4);
     const validJewellery = (jewelleryIds || []).slice(0, 4);
     const validFootwear = footwearId || null;
 
+    if (!show.assignments) show.assignments = {};
     const key = this.getAssignmentKey(modelId, appearanceIndex);
     show.assignments[key] = {
       clothingIds: validClothing,
@@ -525,7 +650,7 @@ class FashionShowStore {
     const show = showId ? this.data.shows.find(s => s.id === showId) : this.getActiveShow();
     if (!show) return null;
 
-    const item = show.items.find(i => i.id === itemId);
+    const item = (show.items || []).find(i => i.id === itemId);
     if (!item) return null;
 
     const current = this.getAssignment(showId, modelId, appearanceIndex);
@@ -575,7 +700,7 @@ class FashionShowStore {
 
   clearAssignment(showId, modelId, appearanceIndex) {
     const show = showId ? this.data.shows.find(s => s.id === showId) : this.getActiveShow();
-    if (!show) return;
+    if (!show || !show.assignments) return;
 
     const key = this.getAssignmentKey(modelId, appearanceIndex);
     delete show.assignments[key];
