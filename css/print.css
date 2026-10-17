@@ -104,6 +104,17 @@
     font-weight: 700 !important;
   }
 
+  .report-logo-wrapper {
+    display: block !important;
+    margin-bottom: 8pt !important;
+  }
+
+  .report-logo-img {
+    height: 40pt !important;
+    width: auto !important;
+    object-fit: contain !important;
+  }
+
   .staff-report-theme .brand-eyebrow {
     color: #444444 !important;
     font-size: 8pt !important;

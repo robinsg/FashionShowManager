@@ -17,10 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // DOM Elements cache
   const elements = {
-    // Show Selector
+    // Show Selector & Theme Toggle
     showSelect: document.getElementById('current-show-select'),
     btnNewShow: document.getElementById('btn-new-show'),
     btnManageShows: document.getElementById('btn-manage-shows'),
+    btnThemeToggle: document.getElementById('btn-theme-toggle'),
     btnExportData: document.getElementById('btn-export-data'),
     btnImportData: document.getElementById('btn-import-data'),
     fileInputImport: document.getElementById('file-input-import'),
@@ -78,9 +79,32 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialization
   // ==========================================
   function init() {
+    initTheme();
     setupEventListeners();
     refreshShowDropdown();
     loadActiveShowData();
+  }
+
+  function initTheme() {
+    const savedTheme = localStorage.getItem('heidiboutique_theme') || 'light';
+    applyTheme(savedTheme);
+  }
+
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      if (elements.btnThemeToggle) elements.btnThemeToggle.textContent = '☀️ Light Mode';
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      if (elements.btnThemeToggle) elements.btnThemeToggle.textContent = '🌙 Dark Mode';
+    }
+    localStorage.setItem('heidiboutique_theme', theme);
+  }
+
+  function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    applyTheme(isDark ? 'light' : 'dark');
+    showToast(`Switched to ${isDark ? 'Light' : 'Dark'} Mode`, 'info');
   }
 
   function setupEventListeners() {
@@ -111,6 +135,11 @@ document.addEventListener('DOMContentLoaded', () => {
       renderShowsManagerList();
       openModal(elements.modalManageShows);
     });
+
+    // Theme toggle
+    if (elements.btnThemeToggle) {
+      elements.btnThemeToggle.addEventListener('click', toggleTheme);
+    }
 
     // Export / Import
     elements.btnExportData.addEventListener('click', handleExport);

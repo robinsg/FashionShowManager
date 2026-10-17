@@ -68,6 +68,9 @@ class FashionReportsEngine {
         <header class="report-header">
           <div class="report-header-top">
             <div class="report-brand">
+              <div class="report-logo-wrapper">
+                <img src="https://heidiboutique.co.uk/cdn/shop/files/heidi_boutique_logo_1000px.png" alt="Heidi Boutique Logo" class="report-logo-img">
+              </div>
               <span class="brand-eyebrow">BACKSTAGE DIRECTORY // OFFICIAL WARDROBE DOSSIER</span>
               <h1 class="report-title">${this.escapeHtml(show.name)}</h1>
               <p class="report-subtitle">Dresser & Wardrobe Team Checklist — Verify all items prior to runway call</p>
@@ -240,6 +243,9 @@ class FashionReportsEngine {
         <!-- Luxury Lookbook Cover / Header -->
         <header class="lookbook-cover-header">
           <div class="editorial-branding">
+            <div class="report-logo-wrapper center-logo">
+              <img src="https://heidiboutique.co.uk/cdn/shop/files/heidi_boutique_logo_1000px.png" alt="Heidi Boutique Logo" class="report-logo-img">
+            </div>
             <span class="collection-season">${this.escapeHtml(show.season.toUpperCase())} ${show.year} COLLECTION</span>
             <h1 class="lookbook-title">${this.escapeHtml(show.name)}</h1>
             <p class="lookbook-subtitle">Official Runway Programme & Retail Client Catalogue</p>
@@ -313,7 +319,6 @@ class FashionReportsEngine {
               <table class="lookbook-items-table">
                 <thead>
                   <tr>
-                    <th class="col-cat">Category</th>
                     <th class="col-item">Item & Description</th>
                     <th class="col-price">Retail Price</th>
                   </tr>
@@ -321,7 +326,6 @@ class FashionReportsEngine {
                 <tbody>
                   ${allItemsList.map(item => `
                     <tr>
-                      <td class="col-cat"><span class="badge-cat badge-${item.category.toLowerCase()}">${item.category}</span></td>
                       <td class="col-item">${this.escapeHtml(item.name)}</td>
                       <td class="col-price">${this.formatPrice(item.price, currency)}</td>
                     </tr>
