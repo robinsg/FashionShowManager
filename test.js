@@ -5,7 +5,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
-const { FashionShowDatabase, DEFAULT_INITIAL_DATA } = require('./db');
+const { FashionShowDatabase, DEFAULT_INITIAL_DATA, generateItemId } = require('./db');
 const { server } = require('./server');
 
 const TEST_DB_PATH = path.join(__dirname, 'test_suite.db');
@@ -91,6 +91,24 @@ async function runTests() {
 
   assert.strictEqual(dress.price, 650.00);
   assert.strictEqual(shoes.category, 'footwear');
+
+  // Test Auto-Generated Lower-case Item ID Generation
+  console.log('   Testing Auto-Generated Lower-case Item IDs...');
+  const maruti115 = db.addItem(newShow.id, { name: 'Maruti pumps', category: 'footwear', price: 115.00 });
+  const maruti135 = db.addItem(newShow.id, { name: 'Maruti pumps', category: 'footwear', price: 135.00 });
+  const another99 = db.addItem(newShow.id, { name: 'Another Trend pumps', category: 'footwear', price: 99.00 });
+  const another129 = db.addItem(newShow.id, { name: 'Another Trend pumps', category: 'footwear', price: 129.00 });
+
+  assert.strictEqual(maruti115.itemId, 'marpum115', 'Item ID for Maruti pumps £115 should be marpum115');
+  assert.strictEqual(maruti135.itemId, 'marpum135', 'Item ID for Maruti pumps £135 should be marpum135');
+  assert.strictEqual(another99.itemId, 'anotre99', 'Item ID for Another Trend pumps £99 should be anotre99');
+  assert.strictEqual(another129.itemId, 'anotre129', 'Item ID for Another Trend pumps £129 should be anotre129');
+
+  // Test duplicate name & price collision handling
+  const maruti115Dup = db.addItem(newShow.id, { name: 'Maruti pumps', category: 'footwear', price: 115.00 });
+  assert.strictEqual(maruti115Dup.itemId, 'marpum115-2', 'Duplicate item ID should append -2 suffix');
+
+  assert.strictEqual(maruti115.itemId.toLowerCase(), maruti115.itemId, 'Item ID must be strictly lower-case');
 
   const assignment = db.setAssignment(newShow.id, model.id, 1, {
     clothingIds: [dress.id],

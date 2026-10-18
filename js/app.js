@@ -819,7 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Apply search
     if (searchQuery) {
-      items = items.filter(it => it.name.toLowerCase().includes(searchQuery));
+      items = items.filter(it => it.name.toLowerCase().includes(searchQuery) || (it.itemId && it.itemId.toLowerCase().includes(searchQuery)));
     }
 
     // Apply sorting
@@ -911,6 +911,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <td>
                     <div class="item-name-cell">
                       <span class="item-title">${escapeHtml(item.name)}</span>
+                      <span class="pill pill-dim pill-xs" style="font-family: monospace; font-size: 10px; text-transform: lowercase;" title="Auto-generated unique Item ID">${escapeHtml((item.itemId || '').toLowerCase())}</span>
                       <button class="inline-edit-btn" title="Quick Edit Name" onclick="window.app.quickEditItemName('${item.id}')">✎</button>
                     </div>
                   </td>
@@ -1314,7 +1315,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="checkbox" ${isSelected ? 'checked' : ''} ${isFull ? 'disabled' : ''} onclick="event.stopPropagation(); window.app.toggleItemInBuilder('${item.id}')">
                   </div>
                   <div class="picker-info">
-                    <div class="picker-name">${escapeHtml(item.name)}</div>
+                    <div class="picker-name">${escapeHtml(item.name)} <span style="font-size: 10px; color: var(--text-dim); font-family: monospace;">(${escapeHtml((item.itemId || '').toLowerCase())})</span></div>
                     <div class="picker-price">${reportsEngine.formatPrice(item.price, currency)}</div>
                   </div>
                 </div>
