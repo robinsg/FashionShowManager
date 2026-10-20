@@ -70,29 +70,8 @@ class FashionReportsEngine {
         <header class="report-header">
           <div class="report-header-top">
             <div class="report-brand">
-              <div class="report-logo-wrapper">
-                <img src="https://heidiboutique.co.uk/cdn/shop/files/heidi_boutique_logo_1000px.png" alt="Heidi Boutique Logo" class="report-logo-img">
-              </div>
-              <span class="brand-eyebrow">BACKSTAGE DIRECTORY // OFFICIAL WARDROBE DOSSIER</span>
-              <h1 class="report-title">${this.escapeHtml(show.name)}</h1>
-              <p class="report-subtitle">Dresser & Wardrobe Team Checklist — Verify all items prior to runway call</p>
+                <h1 class="report-title">${this.escapeHtml(show.name)}</h1>
             </div>
-            <div class="report-meta-box">
-              <div class="meta-item"><span class="meta-label">VENUE:</span> <span class="meta-val">${this.escapeHtml(show.venue || 'Main Catwalk Stage')}</span></div>
-              <div class="meta-item"><span class="meta-label">DATE:</span> <span class="meta-val">${this.escapeHtml(this.formatUKDate(show.date))}</span></div>
-              <div class="meta-item"><span class="meta-label">RUNS:</span> <span class="meta-val">${totalAppearances} Catwalk Appearances</span></div>
-              ${(() => {
-        const themeList = [];
-        for (let tIdx = 1; tIdx <= totalAppearances; tIdx++) {
-          const t = this.store.getAppearanceTheme(show.id, tIdx);
-          if (t) themeList.push(`#${tIdx} ${t}`);
-        }
-        return themeList.length > 0
-          ? `<div class="meta-item"><span class="meta-label">THEMES:</span> <span class="meta-val">${this.escapeHtml(themeList.join(' • '))}</span></div>`
-          : '';
-      })()}
-            </div>
-          </div>
         </header>
 
         <!-- Model Dossiers -->
@@ -120,89 +99,45 @@ class FashionReportsEngine {
         const jewelleryItems = (assignment.jewelleryIds || []).map(id => this.store.getItemById(show.id, id)).filter(Boolean);
         const footwearItem = assignment.footwearId ? this.store.getItemById(show.id, assignment.footwearId) : null;
 
-        const totalItemsCount = clothingItems.length + jewelleryItems.length + (footwearItem ? 1 : 0);
+        // Combine items in order: Clothing -> Jewellery -> Footwear
+        const combinedItems = [
+          ...clothingItems,
+          ...jewelleryItems,
+          ...(footwearItem ? [footwearItem] : [])
+        ];
 
         html += `
           <div class="appearance-wardrobe-block">
             <div class="appearance-block-header">
               <div class="appearance-number">
-                <span class="app-icon">✦</span>
                 CATWALK APPEARANCE #${appIdx}${theme ? ` — <span class="theme-name">${this.escapeHtml(theme.toUpperCase())}</span>` : ''}
               </div>
-              <div class="appearance-count-pill">${totalItemsCount} Total Items Worn</div>
+              <div class="appearance-count-pill">${combinedItems.length} Total Items Worn</div>
             </div>
 
-            <div class="wardrobe-categories-grid">
-              <!-- Clothing Section (Up to 4) -->
-              <div class="category-column clothing-col">
-                <div class="cat-col-header">
-                  <span class="cat-dot dot-clothing"></span>
-                  <span class="cat-col-title">Clothing (${clothingItems.length}/4)</span>
-                </div>
-                ${clothingItems.length > 0 ? `
-                  <ul class="checklist-items">
-                    ${clothingItems.map((item, idx) => `
-                      <li class="checklist-item">
-                        <label class="check-container">
-                          <input type="checkbox" class="staff-check-input" id="check_${model.id}_${appIdx}_c_${idx}">
-                          <span class="custom-checkmark"></span>
-                          <span class="item-name-text">${this.escapeHtml(item.name)}</span>
-                        </label>
-                      </li>
-                    `).join('')}
-                  </ul>
-                ` : `<div class="no-items-placeholder">No clothing assigned</div>`}
-              </div>
-
-              <!-- Jewellery Section (Up to 4) -->
-              <div class="category-column jewellery-col">
-                <div class="cat-col-header">
-                  <span class="cat-dot dot-jewellery"></span>
-                  <span class="cat-col-title">Jewellery (${jewelleryItems.length}/4)</span>
-                </div>
-                ${jewelleryItems.length > 0 ? `
-                  <ul class="checklist-items">
-                    ${jewelleryItems.map((item, idx) => `
-                      <li class="checklist-item">
-                        <label class="check-container">
-                          <input type="checkbox" class="staff-check-input" id="check_${model.id}_${appIdx}_j_${idx}">
-                          <span class="custom-checkmark"></span>
-                          <span class="item-name-text">${this.escapeHtml(item.name)}</span>
-                        </label>
-                      </li>
-                    `).join('')}
-                  </ul>
-                ` : `<div class="no-items-placeholder">No jewellery assigned</div>`}
-              </div>
-
-              <!-- Footwear Section (1 item) -->
-              <div class="category-column footwear-col">
-                <div class="cat-col-header">
-                  <span class="cat-dot dot-footwear"></span>
-                  <span class="cat-col-title">Footwear (${footwearItem ? '1/1' : '0/1'})</span>
-                </div>
-                ${footwearItem ? `
-                  <ul class="checklist-items">
-                    <li class="checklist-item">
-                      <label class="check-container">
-                        <input type="checkbox" class="staff-check-input" id="check_${model.id}_${appIdx}_f">
-                        <span class="custom-checkmark"></span>
-                        <span class="item-name-text bold-text">${this.escapeHtml(footwearItem.name)}</span>
-                      </label>
-                    </li>
-                  </ul>
-                ` : `<div class="no-items-placeholder">No footwear assigned</div>`}
-              </div>
-            </div>
+            ${combinedItems.length > 0 ? `
+              <table class="staff-items-table">
+                <tbody>
+                  ${combinedItems.map(item => `
+                    <tr>
+                      <td class="staff-item-name">${this.escapeHtml(item.name)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            ` : `
+              <div class="no-items-placeholder">No items assigned</div>
+            `}
           </div>
         `;
       }
+
 
       html += `
           </div>
         </article>
       `;
-    });
+    }); //
 
     html += `
         </div>
