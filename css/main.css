@@ -23,7 +23,8 @@
   --text-dim: #767676;
 
   /* Brand Accents */
-  --gold-primary: #a3b7a7; /* Heidi Boutique Sage Green */
+  --gold-primary: #a3b7a7;
+  /* Heidi Boutique Sage Green */
   --gold-light: #4a6350;
   --gold-dark: #2c3e31;
   --gold-gradient: linear-gradient(135deg, #b8c9bc 0%, #a3b7a7 50%, #7d9682 100%);
@@ -108,7 +109,9 @@
 }
 
 /* Base Reset */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -544,7 +547,9 @@ body::before {
   text-transform: uppercase;
 }
 
-.form-input, .form-select, .form-textarea {
+.form-input,
+.form-select,
+.form-textarea {
   width: 100%;
   background: var(--bg-secondary);
   border: 1px solid var(--border-medium);
@@ -557,7 +562,9 @@ body::before {
   outline: none;
 }
 
-.form-input:focus, .form-select:focus, .form-textarea:focus {
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
   border-color: var(--gold-primary);
   box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
 }
@@ -782,9 +789,17 @@ body::before {
   display: inline-block;
 }
 
-.dot-clothing { background-color: var(--cat-clothing); }
-.dot-jewellery { background-color: var(--cat-jewellery); }
-.dot-footwear { background-color: var(--cat-footwear); }
+.dot-clothing {
+  background-color: var(--cat-clothing);
+}
+
+.dot-jewellery {
+  background-color: var(--cat-jewellery);
+}
+
+.dot-footwear {
+  background-color: var(--cat-footwear);
+}
 
 /* ===================================================================
    Tab Content & Views
@@ -804,8 +819,15 @@ body::before {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* View Header */
@@ -1180,7 +1202,8 @@ body::before {
   transition: all var(--transition-fast);
 }
 
-.sort-dropdown:hover, .sort-dropdown:focus {
+.sort-dropdown:hover,
+.sort-dropdown:focus {
   border-color: var(--gold-primary);
   outline: none;
 }
@@ -1891,9 +1914,17 @@ body::before {
   letter-spacing: 0.5px;
 }
 
-.clothing-col .cat-col-header { color: var(--cat-clothing); }
-.jewellery-col .cat-col-header { color: var(--cat-jewellery); }
-.footwear-col .cat-col-header { color: var(--cat-footwear); }
+.clothing-col .cat-col-header {
+  color: var(--cat-clothing);
+}
+
+.jewellery-col .cat-col-header {
+  color: var(--cat-jewellery);
+}
+
+.footwear-col .cat-col-header {
+  color: var(--cat-footwear);
+}
 
 .checklist-items {
   list-style: none;
@@ -2264,8 +2295,15 @@ body::before {
 }
 
 @keyframes modalPop {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .modal-header {
@@ -2587,17 +2625,37 @@ body::before {
   transform: translateY(0);
 }
 
-.toast-success { border-color: rgba(16, 185, 129, 0.5); }
-.toast-success .toast-icon { color: var(--success); }
+.toast-success {
+  border-color: rgba(16, 185, 129, 0.5);
+}
 
-.toast-error { border-color: rgba(239, 68, 68, 0.5); }
-.toast-error .toast-icon { color: var(--danger); }
+.toast-success .toast-icon {
+  color: var(--success);
+}
 
-.toast-warning { border-color: rgba(245, 158, 11, 0.5); }
-.toast-warning .toast-icon { color: var(--warning); }
+.toast-error {
+  border-color: rgba(239, 68, 68, 0.5);
+}
 
-.toast-info { border-color: var(--border-gold); }
-.toast-info .toast-icon { color: var(--gold-light); }
+.toast-error .toast-icon {
+  color: var(--danger);
+}
+
+.toast-warning {
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+.toast-warning .toast-icon {
+  color: var(--warning);
+}
+
+.toast-info {
+  border-color: var(--border-gold);
+}
+
+.toast-info .toast-icon {
+  color: var(--gold-light);
+}
 
 .toast-icon {
   font-weight: 800;
