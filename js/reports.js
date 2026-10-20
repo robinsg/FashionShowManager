@@ -310,10 +310,6 @@ class FashionReportsEngine {
             ${allItemsList.length > 0 ? `
               <table class="lookbook-items-table">
                 <thead>
-                  <tr>
-                    <th class="col-item">Item & Description</th>
-                    <th class="col-price">Retail Price</th>
-                  </tr>
                 </thead>
                 <tbody>
                   ${allItemsList.map(item => `

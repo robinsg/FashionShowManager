@@ -398,6 +398,7 @@
   .model-heading {
     color: #000000 !important;
     font-size: 14pt !important;
+    font-weight: 700 !important;
   }
 
   .total-label {
@@ -407,7 +408,8 @@
 
   .total-val {
     color: #000000 !important;
-    font-size: 13pt !important;
+    font-family: inherit !important;
+    font-size: 10pt !important;
     font-weight: 700 !important;
   }
 
@@ -425,9 +427,9 @@
 
   .lookbook-items-table td {
     color: #111111 !important;
-    font-size: 8.5pt !important;
-    border-bottom: 0.5pt solid #e0e0e0 !important;
-    padding: 5pt 10pt !important;
+    font-size: 10pt !important;
+    border-bottom: none !important;
+    padding: 0 10pt !important;
   }
 
   .badge-cat {
@@ -439,9 +441,13 @@
   }
 
   .col-price {
-    color: #000000 !important;
-    font-weight: 700 !important;
-    font-size: 9.5pt !important;
+    color: #111111 !important;
+    font-family: inherit !important;
+    font-size: 10pt !important;
+    font-weight: 500 !important;
+    text-align: right !important;
+    border-bottom: none !important;
+    padding: 0 10pt !important;
   }
 
   .customer-grand-summary {
