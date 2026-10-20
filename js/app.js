@@ -441,7 +441,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (it) totalVal += it.price;
       }
     });
-    elements.showValuationDisplay.textContent = reportsEngine.formatPrice(totalVal, currency);
+    const formatFn = (reportsEngine && typeof reportsEngine.formatPrice === 'function')
+      ? reportsEngine.formatPrice.bind(reportsEngine)
+      : (amt, curr = '£') => `${curr}${Number(amt || 0).toFixed(2)}`;
+    elements.showValuationDisplay.textContent = formatFn(totalVal, currency);
 
     // Populate Settings Form
     document.getElementById('edit-show-name').value = activeShow.name || '';
@@ -1626,7 +1629,10 @@ document.addEventListener('DOMContentLoaded', () => {
       store.updateItem(activeShow.id, id, { price: parsed });
       // Real-time update in background and reports
       refreshAllViews();
-      showToast(`Updated retail price to ${reportsEngine.formatPrice(parsed, activeShow.currency || '£')}`, 'success');
+      const formatFn = (reportsEngine && typeof reportsEngine.formatPrice === 'function')
+        ? reportsEngine.formatPrice.bind(reportsEngine)
+        : (amt, curr = '£') => `${curr}${Number(amt || 0).toFixed(2)}`;
+      showToast(`Updated retail price to ${formatFn(parsed, activeShow.currency || '£')}`, 'success');
     },
     deleteItem: (id) => {
       const item = store.getItemById(activeShow.id, id);
