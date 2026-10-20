@@ -1,4 +1,4 @@
-/**
+c/**
  * Atelier Runway & Wardrobe Management System
  * Reports Engine:
  * 1. Backstage Staff Wardrobe Checklist (By Model)
@@ -56,8 +56,8 @@ class FashionReportsEngine {
       `;
     }
 
-    const filteredModels = filterModelId === 'all' 
-      ? models 
+    const filteredModels = filterModelId === 'all'
+      ? models
       : models.filter(m => m.id === filterModelId);
 
     const totalAppearances = show.catwalkAppearances;
@@ -80,15 +80,15 @@ class FashionReportsEngine {
               <div class="meta-item"><span class="meta-label">DATE:</span> <span class="meta-val">${this.escapeHtml(this.formatUKDate(show.date))}</span></div>
               <div class="meta-item"><span class="meta-label">RUNS:</span> <span class="meta-val">${totalAppearances} Catwalk Appearances</span></div>
               ${(() => {
-                const themeList = [];
-                for (let tIdx = 1; tIdx <= totalAppearances; tIdx++) {
-                  const t = this.store.getAppearanceTheme(show.id, tIdx);
-                  if (t) themeList.push(`#${tIdx} ${t}`);
-                }
-                return themeList.length > 0 
-                  ? `<div class="meta-item"><span class="meta-label">THEMES:</span> <span class="meta-val">${this.escapeHtml(themeList.join(' • '))}</span></div>`
-                  : '';
-              })()}
+        const themeList = [];
+        for (let tIdx = 1; tIdx <= totalAppearances; tIdx++) {
+          const t = this.store.getAppearanceTheme(show.id, tIdx);
+          if (t) themeList.push(`#${tIdx} ${t}`);
+        }
+        return themeList.length > 0
+          ? `<div class="meta-item"><span class="meta-label">THEMES:</span> <span class="meta-val">${this.escapeHtml(themeList.join(' • '))}</span></div>`
+          : '';
+      })()}
             </div>
           </div>
         </header>
@@ -372,8 +372,8 @@ class FashionReportsEngine {
   }
 
   printReport(reportType) {
-    const reportTitle = reportType === 'staff' 
-      ? 'Staff_Wardrobe_Checklist' 
+    const reportTitle = reportType === 'staff'
+      ? 'Staff_Wardrobe_Checklist'
       : 'Customer_Runway_Lookbook';
 
     const oldTitle = document.title;
