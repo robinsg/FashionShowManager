@@ -12,7 +12,9 @@ class FashionReportsEngine {
 
   formatPrice(amount, currency = '£') {
     if (amount === undefined || amount === null || isNaN(amount)) return `${currency}0.00`;
-    return `${currency}${Number(amount).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const num = Number(amount);
+    if (num === 0) return '';
+    return `${currency}${num.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 
   formatUKDate(dateInput) {
