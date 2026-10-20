@@ -10,6 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Active state
   let currentTab = 'overview';
   let activeShow = store.getActiveShow();
+
+  function formatPrice(amount, currency = '£') {
+    if (reportsEngine && typeof reportsEngine.formatPrice === 'function') {
+      return reportsEngine.formatPrice(amount, currency);
+    }
+    if (amount === undefined || amount === null || isNaN(amount)) return `${currency}0.00`;
+    return `${currency}${Number(amount).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
   let editingOutfitTarget = null; // { modelId, appearanceIndex }
   let catalogFilter = 'all'; // all, clothing, jewellery, footwear
   let catalogSortField = 'default'; // default, category, name, price
@@ -441,10 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (it) totalVal += it.price;
       }
     });
-    const formatFn = (reportsEngine && typeof reportsEngine.formatPrice === 'function')
-      ? reportsEngine.formatPrice.bind(reportsEngine)
-      : (amt, curr = '£') => `${curr}${Number(amt || 0).toFixed(2)}`;
-    elements.showValuationDisplay.textContent = formatFn(totalVal, currency);
+    elements.showValuationDisplay.textContent = formatPrice(totalVal, currency);
 
     // Populate Settings Form
     document.getElementById('edit-show-name').value = activeShow.name || '';
@@ -1016,6 +1021,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   function renderOutfitsMatrix() {
     activeShow = store.getActiveShow();
+    if (!activeShow) return;
     const models = store.getModels(activeShow.id);
     const totalAppearances = activeShow.catwalkAppearances;
     const currency = activeShow.currency || '£';
@@ -1083,7 +1089,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="slot-title">Appearance #${appIdx}</div>
                 ${theme ? `<div class="slot-theme-pill" title="Appearance Theme: ${escapeHtml(theme)}" onclick="window.app.openThemeEditor(${appIdx})" style="cursor: pointer;">${escapeHtml(theme)} ✎</div>` : `<button type="button" class="btn btn-secondary btn-xs" style="margin-top: 2px;" onclick="window.app.openThemeEditor(${appIdx})">+ Add Theme</button>`}
               </div>
-              <div class="slot-look-cost">${reportsEngine.formatPrice(lookPrice, currency)}</div>
+              <div class="slot-look-cost">${formatPrice(lookPrice, currency)}</div>
             </div>
 
             <div class="slot-body">
@@ -1097,7 +1103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   ${clothingItems.length > 0 ? clothingItems.map(item => `
                     <div class="slot-item-chip chip-clothing">
                       <span class="chip-name">${escapeHtml(item.name)}</span>
-                      <span class="chip-price">${reportsEngine.formatPrice(item.price, currency)}</span>
+                      <span class="chip-price">${formatPrice(item.price, currency)}</span>
                       <button class="chip-remove" title="Remove" onclick="window.app.removeItemFromSlot('${model.id}', ${appIdx}, '${item.id}')">✕</button>
                     </div>
                   `).join('') : '<div class="chip-empty-placeholder">No clothing assigned</div>'}
@@ -1114,7 +1120,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   ${jewelleryItems.length > 0 ? jewelleryItems.map(item => `
                     <div class="slot-item-chip chip-jewellery">
                       <span class="chip-name">${escapeHtml(item.name)}</span>
-                      <span class="chip-price">${reportsEngine.formatPrice(item.price, currency)}</span>
+                      <span class="chip-price">${formatPrice(item.price, currency)}</span>
                       <button class="chip-remove" title="Remove" onclick="window.app.removeItemFromSlot('${model.id}', ${appIdx}, '${item.id}')">✕</button>
                     </div>
                   `).join('') : '<div class="chip-empty-placeholder">No jewellery assigned</div>'}
@@ -1131,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   ${footwearItem ? `
                     <div class="slot-item-chip chip-footwear">
                       <span class="chip-name">${escapeHtml(footwearItem.name)}</span>
-                      <span class="chip-price">${reportsEngine.formatPrice(footwearItem.price, currency)}</span>
+                      <span class="chip-price">${formatPrice(footwearItem.price, currency)}</span>
                       <button class="chip-remove" title="Remove" onclick="window.app.removeItemFromSlot('${model.id}', ${appIdx}, '${footwearItem.id}')">✕</button>
                     </div>
                   ` : '<div class="chip-empty-placeholder">No footwear assigned</div>'}
@@ -1199,7 +1205,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="round-model-slot">
             <div class="slot-head-sm">
               <span class="walk-tag-sm">#${model.walkOrder} ${escapeHtml(model.firstName)}</span>
-              <span class="price-tag-sm">${reportsEngine.formatPrice(lookPrice, currency)}</span>
+              <span class="price-tag-sm">${formatPrice(lookPrice, currency)}</span>
             </div>
 
             <div class="slot-summary-compact">
@@ -1279,7 +1285,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="look-total-badge">
           <span class="total-caption">Total Look Value:</span>
-          <span class="total-amount">${reportsEngine.formatPrice(lookPrice, currency)}</span>
+          <span class="total-amount">${formatPrice(lookPrice, currency)}</span>
         </div>
       </div>
 
@@ -1319,7 +1325,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>
                   <div class="picker-info">
                     <div class="picker-name">${escapeHtml(item.name)} <span style="font-size: 10px; color: var(--text-dim); font-family: monospace;">(${escapeHtml((item.itemId || '').toLowerCase())})</span></div>
-                    <div class="picker-price">${reportsEngine.formatPrice(item.price, currency)}</div>
+                    <div class="picker-price">${formatPrice(item.price, currency)}</div>
                   </div>
                 </div>
               `;
@@ -1348,8 +1354,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="checkbox" ${isSelected ? 'checked' : ''} ${isFull ? 'disabled' : ''} onclick="event.stopPropagation(); window.app.toggleItemInBuilder('${item.id}')">
                   </div>
                   <div class="picker-info">
-                    <div class="picker-name">${escapeHtml(item.name)}</div>
-                    <div class="picker-price">${reportsEngine.formatPrice(item.price, currency)}</div>
+                    <div class="picker-name">${escapeHtml(item.name)} <span style="font-size: 10px; color: var(--text-dim); font-family: monospace;">(${escapeHtml((item.itemId || '').toLowerCase())})</span></div>
+                    <div class="picker-price">${formatPrice(item.price, currency)}</div>
                   </div>
                 </div>
               `;
@@ -1377,8 +1383,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="radio" name="footwear_radio" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); window.app.toggleItemInBuilder('${item.id}')">
                   </div>
                   <div class="picker-info">
-                    <div class="picker-name">${escapeHtml(item.name)}</div>
-                    <div class="picker-price">${reportsEngine.formatPrice(item.price, currency)}</div>
+                    <div class="picker-name">${escapeHtml(item.name)} <span style="font-size: 10px; color: var(--text-dim); font-family: monospace;">(${escapeHtml((item.itemId || '').toLowerCase())})</span></div>
+                    <div class="picker-price">${formatPrice(item.price, currency)}</div>
                   </div>
                 </div>
               `;
@@ -1629,10 +1635,7 @@ document.addEventListener('DOMContentLoaded', () => {
       store.updateItem(activeShow.id, id, { price: parsed });
       // Real-time update in background and reports
       refreshAllViews();
-      const formatFn = (reportsEngine && typeof reportsEngine.formatPrice === 'function')
-        ? reportsEngine.formatPrice.bind(reportsEngine)
-        : (amt, curr = '£') => `${curr}${Number(amt || 0).toFixed(2)}`;
-      showToast(`Updated retail price to ${formatFn(parsed, activeShow.currency || '£')}`, 'success');
+      showToast(`Updated retail price to ${formatPrice(parsed, activeShow.currency || '£')}`, 'success');
     },
     deleteItem: (id) => {
       const item = store.getItemById(activeShow.id, id);
