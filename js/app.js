@@ -10,6 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Active state
   let currentTab = 'overview';
   let activeShow = store.getActiveShow();
+
+  function formatPrice(amount, currency = '£') {
+    if (reportsEngine && typeof reportsEngine.formatPrice === 'function') {
+      return reportsEngine.formatPrice(amount, currency);
+    }
+    if (amount === undefined || amount === null || isNaN(amount)) return `${currency}0.00`;
+    return `${currency}${Number(amount).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
   let editingOutfitTarget = null; // { modelId, appearanceIndex }
   let catalogFilter = 'all'; // all, clothing, jewellery, footwear
   let catalogSortField = 'default'; // default, category, name, price
@@ -110,12 +118,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (store.isSQLite) {
       elements.dbStatusPill.classList.remove('disconnected');
       elements.dbStatusPill.classList.add('connected');
-      if (elements.dbStatusText) elements.dbStatusText.textContent = 'SQLite Active';
+      if (elements.dbStatusText) elements.dbStatusText.textContent = 'DB Active';
       elements.dbStatusPill.title = 'Storage: Connected to SQLite database (fashion_show.db)';
     } else {
       elements.dbStatusPill.classList.remove('connected');
       elements.dbStatusPill.classList.add('disconnected');
-      if (elements.dbStatusText) elements.dbStatusText.textContent = 'SQLite Offline';
+      if (elements.dbStatusText) elements.dbStatusText.textContent = 'DB Offline';
       elements.dbStatusPill.title = 'Storage: Offline / In-Memory (Run `node server.js` to enable SQLite persistence)';
     }
   }
@@ -441,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (it) totalVal += it.price;
       }
     });
-    elements.showValuationDisplay.textContent = reportsEngine.formatPrice(totalVal, currency);
+    elements.showValuationDisplay.textContent = formatPrice(totalVal, currency);
 
     // Populate Settings Form
     document.getElementById('edit-show-name').value = activeShow.name || '';
@@ -479,17 +487,17 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="themes-overview-bar" style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--border-subtle); display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
           <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: var(--text-dim); text-transform: uppercase;">Runway Themes:</span>
           ${(() => {
-            const themePills = [];
-            for (let i = 1; i <= activeShow.catwalkAppearances; i++) {
-              const t = store.getAppearanceTheme(activeShow.id, i);
-              themePills.push(`
+          const themePills = [];
+          for (let i = 1; i <= activeShow.catwalkAppearances; i++) {
+            const t = store.getAppearanceTheme(activeShow.id, i);
+            themePills.push(`
                 <span class="pill pill-gold pill-sm" style="cursor: pointer;" onclick="window.app.openThemeEditor(${i})" title="Click to edit theme for Appearance #${i}">
                   #${i} ${escapeHtml(t || 'Untitled')} ✎
                 </span>
               `);
-            }
-            return themePills.join('');
-          })()}
+          }
+          return themePills.join('');
+        })()}
         </div>
       `;
     }
@@ -698,16 +706,16 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.modelsListContainer.innerHTML = `
       <div class="models-grid">
         ${models.map((model, idx) => {
-          // Calculate appearances summary for this model
-          let looksAssigned = 0;
-          for (let i = 1; i <= activeShow.catwalkAppearances; i++) {
-            const ass = store.getAssignment(activeShow.id, model.id, i);
-            if ((ass.clothingIds && ass.clothingIds.length) || (ass.jewelleryIds && ass.jewelleryIds.length) || ass.footwearId) {
-              looksAssigned++;
-            }
-          }
+      // Calculate appearances summary for this model
+      let looksAssigned = 0;
+      for (let i = 1; i <= activeShow.catwalkAppearances; i++) {
+        const ass = store.getAssignment(activeShow.id, model.id, i);
+        if ((ass.clothingIds && ass.clothingIds.length) || (ass.jewelleryIds && ass.jewelleryIds.length) || ass.footwearId) {
+          looksAssigned++;
+        }
+      }
 
-          return `
+      return `
             <div class="model-card" data-model-id="${model.id}">
               <div class="model-card-header">
                 <div class="walk-order-badge">
@@ -743,7 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
           `;
-        }).join('')}
+    }).join('')}
       </div>
     `;
   }
@@ -819,7 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Apply search
     if (searchQuery) {
-      items = items.filter(it => it.name.toLowerCase().includes(searchQuery));
+      items = items.filter(it => it.name.toLowerCase().includes(searchQuery) || (it.itemId && it.itemId.toLowerCase().includes(searchQuery)));
     }
 
     // Apply sorting
@@ -899,8 +907,8 @@ document.addEventListener('DOMContentLoaded', () => {
           </thead>
           <tbody>
             ${items.map(item => {
-              const usage = store.getItemUsageCount(activeShow.id, item.id);
-              return `
+      const usage = store.getItemUsageCount(activeShow.id, item.id);
+      return `
                 <tr class="item-row" data-item-id="${item.id}">
                   <td>
                     <span class="badge-cat badge-${item.category}">
@@ -911,6 +919,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <td>
                     <div class="item-name-cell">
                       <span class="item-title">${escapeHtml(item.name)}</span>
+                      <span class="pill pill-dim pill-xs" style="font-family: monospace; font-size: 10px; text-transform: lowercase;" title="Auto-generated unique Item ID">${escapeHtml((item.itemId || '').toLowerCase())}</span>
                       <button class="inline-edit-btn" title="Quick Edit Name" onclick="window.app.quickEditItemName('${item.id}')">✎</button>
                     </div>
                   </td>
@@ -942,7 +951,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   </td>
                 </tr>
               `;
-            }).join('')}
+    }).join('')}
           </tbody>
         </table>
       </div>
@@ -1012,6 +1021,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   function renderOutfitsMatrix() {
     activeShow = store.getActiveShow();
+    if (!activeShow) return;
     const models = store.getModels(activeShow.id);
     const totalAppearances = activeShow.catwalkAppearances;
     const currency = activeShow.currency || '£';
@@ -1079,7 +1089,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="slot-title">Appearance #${appIdx}</div>
                 ${theme ? `<div class="slot-theme-pill" title="Appearance Theme: ${escapeHtml(theme)}" onclick="window.app.openThemeEditor(${appIdx})" style="cursor: pointer;">${escapeHtml(theme)} ✎</div>` : `<button type="button" class="btn btn-secondary btn-xs" style="margin-top: 2px;" onclick="window.app.openThemeEditor(${appIdx})">+ Add Theme</button>`}
               </div>
-              <div class="slot-look-cost">${reportsEngine.formatPrice(lookPrice, currency)}</div>
+              <div class="slot-look-cost">${formatPrice(lookPrice, currency)}</div>
             </div>
 
             <div class="slot-body">
@@ -1093,7 +1103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   ${clothingItems.length > 0 ? clothingItems.map(item => `
                     <div class="slot-item-chip chip-clothing">
                       <span class="chip-name">${escapeHtml(item.name)}</span>
-                      <span class="chip-price">${reportsEngine.formatPrice(item.price, currency)}</span>
+                      <span class="chip-price">${formatPrice(item.price, currency)}</span>
                       <button class="chip-remove" title="Remove" onclick="window.app.removeItemFromSlot('${model.id}', ${appIdx}, '${item.id}')">✕</button>
                     </div>
                   `).join('') : '<div class="chip-empty-placeholder">No clothing assigned</div>'}
@@ -1110,7 +1120,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   ${jewelleryItems.length > 0 ? jewelleryItems.map(item => `
                     <div class="slot-item-chip chip-jewellery">
                       <span class="chip-name">${escapeHtml(item.name)}</span>
-                      <span class="chip-price">${reportsEngine.formatPrice(item.price, currency)}</span>
+                      <span class="chip-price">${formatPrice(item.price, currency)}</span>
                       <button class="chip-remove" title="Remove" onclick="window.app.removeItemFromSlot('${model.id}', ${appIdx}, '${item.id}')">✕</button>
                     </div>
                   `).join('') : '<div class="chip-empty-placeholder">No jewellery assigned</div>'}
@@ -1127,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   ${footwearItem ? `
                     <div class="slot-item-chip chip-footwear">
                       <span class="chip-name">${escapeHtml(footwearItem.name)}</span>
-                      <span class="chip-price">${reportsEngine.formatPrice(footwearItem.price, currency)}</span>
+                      <span class="chip-price">${formatPrice(footwearItem.price, currency)}</span>
                       <button class="chip-remove" title="Remove" onclick="window.app.removeItemFromSlot('${model.id}', ${appIdx}, '${footwearItem.id}')">✕</button>
                     </div>
                   ` : '<div class="chip-empty-placeholder">No footwear assigned</div>'}
@@ -1195,7 +1205,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="round-model-slot">
             <div class="slot-head-sm">
               <span class="walk-tag-sm">#${model.walkOrder} ${escapeHtml(model.firstName)}</span>
-              <span class="price-tag-sm">${reportsEngine.formatPrice(lookPrice, currency)}</span>
+              <span class="price-tag-sm">${formatPrice(lookPrice, currency)}</span>
             </div>
 
             <div class="slot-summary-compact">
@@ -1275,7 +1285,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="look-total-badge">
           <span class="total-caption">Total Look Value:</span>
-          <span class="total-amount">${reportsEngine.formatPrice(lookPrice, currency)}</span>
+          <span class="total-amount">${formatPrice(lookPrice, currency)}</span>
         </div>
       </div>
 
@@ -1285,8 +1295,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <select id="select-clone-source" class="form-input form-input-sm" style="width: auto;">
           <option value="">-- Choose source --</option>
           ${Array.from({ length: activeShow.catwalkAppearances }, (_, i) => i + 1)
-            .filter(app => app !== appearanceIndex)
-            .map(app => `<option value="${app}">Appearance #${app}</option>`).join('')}
+        .filter(app => app !== appearanceIndex)
+        .map(app => `<option value="${app}">Appearance #${app}</option>`).join('')}
         </select>
         <button class="btn btn-secondary btn-sm" onclick="window.app.cloneOutfitFromSelected()">Apply Copy</button>
       </div>
@@ -1305,21 +1315,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div class="items-picker-scroll">
             ${clothingAll.length > 0 ? clothingAll.map(item => {
-              const isSelected = assignment.clothingIds && assignment.clothingIds.includes(item.id);
-              const isFull = !isSelected && clothingItems.length >= 4;
-              return `
+          const isSelected = assignment.clothingIds && assignment.clothingIds.includes(item.id);
+          const isFull = !isSelected && clothingItems.length >= 4;
+          return `
                 <div class="picker-item-card ${isSelected ? 'selected' : ''} ${isFull ? 'disabled-item' : ''}" 
                      onclick="window.app.toggleItemInBuilder('${item.id}')">
                   <div class="picker-check">
                     <input type="checkbox" ${isSelected ? 'checked' : ''} ${isFull ? 'disabled' : ''} onclick="event.stopPropagation(); window.app.toggleItemInBuilder('${item.id}')">
                   </div>
                   <div class="picker-info">
-                    <div class="picker-name">${escapeHtml(item.name)}</div>
-                    <div class="picker-price">${reportsEngine.formatPrice(item.price, currency)}</div>
+                    <div class="picker-name">${escapeHtml(item.name)} <span style="font-size: 10px; color: var(--text-dim); font-family: monospace;">(${escapeHtml((item.itemId || '').toLowerCase())})</span></div>
+                    <div class="picker-price">${formatPrice(item.price, currency)}</div>
                   </div>
                 </div>
               `;
-            }).join('') : '<p class="empty-col">No clothing items in catalogue. Add some in Wardrobe tab.</p>'}
+        }).join('') : '<p class="empty-col">No clothing items in catalogue. Add some in Wardrobe tab.</p>'}
           </div>
         </div>
 
@@ -1335,21 +1345,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div class="items-picker-scroll">
             ${jewelleryAll.length > 0 ? jewelleryAll.map(item => {
-              const isSelected = assignment.jewelleryIds && assignment.jewelleryIds.includes(item.id);
-              const isFull = !isSelected && jewelleryItems.length >= 4;
-              return `
+          const isSelected = assignment.jewelleryIds && assignment.jewelleryIds.includes(item.id);
+          const isFull = !isSelected && jewelleryItems.length >= 4;
+          return `
                 <div class="picker-item-card ${isSelected ? 'selected' : ''} ${isFull ? 'disabled-item' : ''}" 
                      onclick="window.app.toggleItemInBuilder('${item.id}')">
                   <div class="picker-check">
                     <input type="checkbox" ${isSelected ? 'checked' : ''} ${isFull ? 'disabled' : ''} onclick="event.stopPropagation(); window.app.toggleItemInBuilder('${item.id}')">
                   </div>
                   <div class="picker-info">
-                    <div class="picker-name">${escapeHtml(item.name)}</div>
-                    <div class="picker-price">${reportsEngine.formatPrice(item.price, currency)}</div>
+                    <div class="picker-name">${escapeHtml(item.name)} <span style="font-size: 10px; color: var(--text-dim); font-family: monospace;">(${escapeHtml((item.itemId || '').toLowerCase())})</span></div>
+                    <div class="picker-price">${formatPrice(item.price, currency)}</div>
                   </div>
                 </div>
               `;
-            }).join('') : '<p class="empty-col">No jewellery items in catalogue.</p>'}
+        }).join('') : '<p class="empty-col">No jewellery items in catalogue.</p>'}
           </div>
         </div>
 
@@ -1365,20 +1375,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div class="items-picker-scroll">
             ${footwearAll.length > 0 ? footwearAll.map(item => {
-              const isSelected = assignment.footwearId === item.id;
-              return `
+          const isSelected = assignment.footwearId === item.id;
+          return `
                 <div class="picker-item-card ${isSelected ? 'selected' : ''}" 
                      onclick="window.app.toggleItemInBuilder('${item.id}')">
                   <div class="picker-check">
                     <input type="radio" name="footwear_radio" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); window.app.toggleItemInBuilder('${item.id}')">
                   </div>
                   <div class="picker-info">
-                    <div class="picker-name">${escapeHtml(item.name)}</div>
-                    <div class="picker-price">${reportsEngine.formatPrice(item.price, currency)}</div>
+                    <div class="picker-name">${escapeHtml(item.name)} <span style="font-size: 10px; color: var(--text-dim); font-family: monospace;">(${escapeHtml((item.itemId || '').toLowerCase())})</span></div>
+                    <div class="picker-price">${formatPrice(item.price, currency)}</div>
                   </div>
                 </div>
               `;
-            }).join('') : '<p class="empty-col">No footwear items in catalogue.</p>'}
+        }).join('') : '<p class="empty-col">No footwear items in catalogue.</p>'}
           </div>
         </div>
       </div>
@@ -1403,9 +1413,9 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.customerAppearanceFilterSelect.innerHTML = `
       <option value="all">All Appearances (1 - ${totalAppearances})</option>
       ${Array.from({ length: totalAppearances }, (_, i) => i + 1).map(n => {
-        const theme = store.getAppearanceTheme(activeShow.id, n);
-        return `<option value="${n}">Appearance #${n}${theme ? ` — ${escapeHtml(theme)}` : ''}</option>`;
-      }).join('')}
+      const theme = store.getAppearanceTheme(activeShow.id, n);
+      return `<option value="${n}">Appearance #${n}${theme ? ` — ${escapeHtml(theme)}` : ''}</option>`;
+    }).join('')}
     `;
   }
 
@@ -1625,7 +1635,7 @@ document.addEventListener('DOMContentLoaded', () => {
       store.updateItem(activeShow.id, id, { price: parsed });
       // Real-time update in background and reports
       refreshAllViews();
-      showToast(`Updated retail price to ${reportsEngine.formatPrice(parsed, activeShow.currency || '£')}`, 'success');
+      showToast(`Updated retail price to ${formatPrice(parsed, activeShow.currency || '£')}`, 'success');
     },
     deleteItem: (id) => {
       const item = store.getItemById(activeShow.id, id);

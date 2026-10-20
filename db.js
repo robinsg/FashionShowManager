@@ -117,6 +117,30 @@ const DEFAULT_INITIAL_DATA = {
   ]
 };
 
+function generateItemId(name, price, existingItemIds = []) {
+  if (!name || typeof name !== 'string') name = 'item';
+  const words = name.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().split(/\s+/).filter(Boolean);
+  let prefix = '';
+  if (words.length >= 2) {
+    prefix = words[0].slice(0, 3) + words[1].slice(0, 3);
+  } else if (words.length === 1) {
+    prefix = words[0].slice(0, 6);
+  } else {
+    prefix = 'item';
+  }
+  if (!prefix) prefix = 'item';
+  const priceNum = Math.floor(Math.abs(parseFloat(price) || 0));
+  let baseId = `${prefix}${priceNum}`.toLowerCase();
+  let finalId = baseId;
+  let counter = 2;
+  const existingSet = new Set((existingItemIds || []).map(id => (id || '').toLowerCase()));
+  while (existingSet.has(finalId)) {
+    finalId = `${baseId}-${counter}`;
+    counter++;
+  }
+  return finalId;
+}
+
 class FashionShowDatabase {
   constructor(dbPath = DB_FILE_PATH) {
     this.dbPath = dbPath;
@@ -198,6 +222,7 @@ class FashionShowDatabase {
       CREATE TABLE IF NOT EXISTS items (
         id TEXT PRIMARY KEY,
         show_id TEXT NOT NULL,
+        item_id TEXT,
         name TEXT NOT NULL,
         category TEXT NOT NULL,
         price REAL NOT NULL,
@@ -205,6 +230,31 @@ class FashionShowDatabase {
       );
       CREATE INDEX IF NOT EXISTS idx_items_show ON items(show_id);
     `);
+
+    try {
+      this.db.exec('ALTER TABLE items ADD COLUMN item_id TEXT;');
+    } catch (e) {
+      // Column already exists
+    }
+
+    try {
+      const nullItems = this.db.prepare('SELECT * FROM items WHERE item_id IS NULL OR item_id = ""').all();
+      if (nullItems.length > 0) {
+        const updateStmt = this.db.prepare('UPDATE items SET item_id = ? WHERE id = ?');
+        const showItemsMap = {};
+        for (const item of nullItems) {
+          if (!showItemsMap[item.show_id]) {
+            const existing = this.db.prepare('SELECT item_id FROM items WHERE show_id = ? AND item_id IS NOT NULL AND item_id != ""').all(item.show_id);
+            showItemsMap[item.show_id] = existing.map(x => x.item_id);
+          }
+          const newCode = generateItemId(item.name, item.price, showItemsMap[item.show_id]);
+          showItemsMap[item.show_id].push(newCode);
+          updateStmt.run(newCode, item.id);
+        }
+      }
+    } catch (e) {
+      // Migration check completed
+    }
 
     // 4. Catwalk Outfit Assignments table
     this.db.exec(`
@@ -258,6 +308,7 @@ class FashionShowDatabase {
       const itemRows = this.db.prepare('SELECT * FROM items WHERE show_id = ?').all(s.id);
       const items = itemRows.map(i => ({
         id: i.id,
+        itemId: i.item_id || generateItemId(i.name, i.price, []),
         name: i.name,
         category: i.category,
         price: Number(i.price)
@@ -335,8 +386,8 @@ class FashionShowDatabase {
       `);
 
       const insertItem = this.db.prepare(`
-        INSERT INTO items (id, show_id, name, category, price)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO items (id, show_id, item_id, name, category, price)
+        VALUES (?, ?, ?, ?, ?, ?)
       `);
 
       const insertAssignment = this.db.prepare(`
@@ -371,10 +422,14 @@ class FashionShowDatabase {
         }
 
         if (Array.isArray(show.items)) {
+          const showItemIds = [];
           show.items.forEach(item => {
+            const code = item.itemId || generateItemId(item.name, item.price, showItemIds);
+            showItemIds.push(code);
             insertItem.run(
               item.id,
               show.id,
+              code,
               item.name,
               item.category,
               parseFloat(item.price) || 0
@@ -478,7 +533,13 @@ class FashionShowDatabase {
       .map(m => ({ id: m.id, firstName: m.first_name, walkOrder: m.walk_order, notes: m.notes || '' }));
 
     const items = this.db.prepare('SELECT * FROM items WHERE show_id = ?').all(showId)
-      .map(i => ({ id: i.id, name: i.name, category: i.category, price: Number(i.price) }));
+      .map(i => ({
+        id: i.id,
+        itemId: i.item_id || generateItemId(i.name, i.price, []),
+        name: i.name,
+        category: i.category,
+        price: Number(i.price)
+      }));
 
     const assignmentRows = this.db.prepare('SELECT * FROM assignments WHERE show_id = ?').all(showId);
     const assignments = {};
@@ -602,11 +663,11 @@ class FashionShowDatabase {
       });
 
       const insertItem = this.db.prepare(`
-        INSERT INTO items (id, show_id, name, category, price)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO items (id, show_id, item_id, name, category, price)
+        VALUES (?, ?, ?, ?, ?, ?)
       `);
       copy.items.forEach(i => {
-        insertItem.run(i.id, copy.id, i.name, i.category, i.price);
+        insertItem.run(i.id, copy.id, i.itemId || generateItemId(i.name, i.price, []), i.name, i.category, i.price);
       });
 
       const insertAssignment = this.db.prepare(`
@@ -717,7 +778,7 @@ class FashionShowDatabase {
 
   // --- Wardrobe Item Operations ---
 
-  addItem(showId, { name, category, price }) {
+  addItem(showId, { name, category, price, itemId }) {
     const trimmedName = (name || '').trim();
     if (!trimmedName) throw new Error('Item name is required.');
 
@@ -733,12 +794,16 @@ class FashionShowDatabase {
     const id = 'itm_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
     const roundedPrice = Math.round(parsedPrice * 100) / 100;
 
-    this.db.prepare(`
-      INSERT INTO items (id, show_id, name, category, price)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(id, showId, trimmedName, category, roundedPrice);
+    const existingItems = this.db.prepare('SELECT item_id FROM items WHERE show_id = ?').all(showId);
+    const existingCodes = existingItems.map(i => i.item_id);
+    const code = (itemId && typeof itemId === 'string') ? itemId.toLowerCase() : generateItemId(trimmedName, roundedPrice, existingCodes);
 
-    return { id, showId, name: trimmedName, category, price: roundedPrice };
+    this.db.prepare(`
+      INSERT INTO items (id, show_id, item_id, name, category, price)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(id, showId, code, trimmedName, category, roundedPrice);
+
+    return { id, showId, itemId: code, name: trimmedName, category, price: roundedPrice };
   }
 
   updateItem(showId, itemId, updates) {
@@ -757,13 +822,22 @@ class FashionShowDatabase {
       }
     }
 
+    let code = current.item_id;
+    if (updates.itemId) {
+      code = updates.itemId.toLowerCase();
+    } else if (updates.name !== undefined || updates.price !== undefined) {
+      const existingItems = this.db.prepare('SELECT item_id FROM items WHERE show_id = ? AND id != ?').all(showId, itemId);
+      const existingCodes = existingItems.map(i => i.item_id);
+      code = generateItemId(name, price, existingCodes);
+    }
+
     this.db.prepare(`
       UPDATE items
-      SET name = ?, category = ?, price = ?
+      SET item_id = ?, name = ?, category = ?, price = ?
       WHERE id = ? AND show_id = ?
-    `).run(name, category, price, itemId, showId);
+    `).run(code, name, category, price, itemId, showId);
 
-    return { id: itemId, showId, name, category, price };
+    return { id: itemId, showId, itemId: code, name, category, price };
   }
 
   deleteItem(showId, itemId) {
@@ -875,5 +949,6 @@ class FashionShowDatabase {
 module.exports = {
   FashionShowDatabase,
   DEFAULT_INITIAL_DATA,
-  DB_FILE_PATH
+  DB_FILE_PATH,
+  generateItemId
 };

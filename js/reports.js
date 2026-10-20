@@ -56,8 +56,8 @@ class FashionReportsEngine {
       `;
     }
 
-    const filteredModels = filterModelId === 'all' 
-      ? models 
+    const filteredModels = filterModelId === 'all'
+      ? models
       : models.filter(m => m.id === filterModelId);
 
     const totalAppearances = show.catwalkAppearances;
@@ -80,15 +80,15 @@ class FashionReportsEngine {
               <div class="meta-item"><span class="meta-label">DATE:</span> <span class="meta-val">${this.escapeHtml(this.formatUKDate(show.date))}</span></div>
               <div class="meta-item"><span class="meta-label">RUNS:</span> <span class="meta-val">${totalAppearances} Catwalk Appearances</span></div>
               ${(() => {
-                const themeList = [];
-                for (let tIdx = 1; tIdx <= totalAppearances; tIdx++) {
-                  const t = this.store.getAppearanceTheme(show.id, tIdx);
-                  if (t) themeList.push(`#${tIdx} ${t}`);
-                }
-                return themeList.length > 0 
-                  ? `<div class="meta-item"><span class="meta-label">THEMES:</span> <span class="meta-val">${this.escapeHtml(themeList.join(' • '))}</span></div>`
-                  : '';
-              })()}
+        const themeList = [];
+        for (let tIdx = 1; tIdx <= totalAppearances; tIdx++) {
+          const t = this.store.getAppearanceTheme(show.id, tIdx);
+          if (t) themeList.push(`#${tIdx} ${t}`);
+        }
+        return themeList.length > 0
+          ? `<div class="meta-item"><span class="meta-label">THEMES:</span> <span class="meta-val">${this.escapeHtml(themeList.join(' • '))}</span></div>`
+          : '';
+      })()}
             </div>
           </div>
         </header>
@@ -251,17 +251,10 @@ class FashionReportsEngine {
         <!-- Luxury Lookbook Cover / Header -->
         <header class="lookbook-cover-header">
           <div class="editorial-branding">
-            <div class="report-logo-wrapper center-logo">
+            <div class="report-logo-wrapper left-logo">
               <img src="https://heidiboutique.co.uk/cdn/shop/files/heidi_boutique_logo_1000px.png" alt="Heidi Boutique Logo" class="report-logo-img">
             </div>
-            <span class="collection-season">${this.escapeHtml(show.season.toUpperCase())} ${show.year} COLLECTION</span>
             <h1 class="lookbook-title">${this.escapeHtml(show.name)}</h1>
-            <p class="lookbook-subtitle">Official Runway Programme & Retail Client Catalogue</p>
-          </div>
-          <div class="lookbook-details-bar">
-            <span><strong>Date:</strong> ${this.escapeHtml(this.formatUKDate(show.date))}</span>
-            <span>•</span>
-            <span><strong>Location:</strong> ${this.escapeHtml(show.venue || 'Runway Hall')}</span>
           </div>
         </header>
 
@@ -372,8 +365,8 @@ class FashionReportsEngine {
   }
 
   printReport(reportType) {
-    const reportTitle = reportType === 'staff' 
-      ? 'Staff_Wardrobe_Checklist' 
+    const reportTitle = reportType === 'staff'
+      ? 'Staff_Wardrobe_Checklist'
       : 'Customer_Runway_Lookbook';
 
     const oldTitle = document.title;
