@@ -118,12 +118,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (store.isSQLite) {
       elements.dbStatusPill.classList.remove('disconnected');
       elements.dbStatusPill.classList.add('connected');
-      if (elements.dbStatusText) elements.dbStatusText.textContent = 'SQLite Active';
+      if (elements.dbStatusText) elements.dbStatusText.textContent = 'DB Active';
       elements.dbStatusPill.title = 'Storage: Connected to SQLite database (fashion_show.db)';
     } else {
       elements.dbStatusPill.classList.remove('connected');
       elements.dbStatusPill.classList.add('disconnected');
-      if (elements.dbStatusText) elements.dbStatusText.textContent = 'SQLite Offline';
+      if (elements.dbStatusText) elements.dbStatusText.textContent = 'DB Offline';
       elements.dbStatusPill.title = 'Storage: Offline / In-Memory (Run `node server.js` to enable SQLite persistence)';
     }
   }
@@ -487,17 +487,17 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="themes-overview-bar" style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--border-subtle); display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
           <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: var(--text-dim); text-transform: uppercase;">Runway Themes:</span>
           ${(() => {
-            const themePills = [];
-            for (let i = 1; i <= activeShow.catwalkAppearances; i++) {
-              const t = store.getAppearanceTheme(activeShow.id, i);
-              themePills.push(`
+          const themePills = [];
+          for (let i = 1; i <= activeShow.catwalkAppearances; i++) {
+            const t = store.getAppearanceTheme(activeShow.id, i);
+            themePills.push(`
                 <span class="pill pill-gold pill-sm" style="cursor: pointer;" onclick="window.app.openThemeEditor(${i})" title="Click to edit theme for Appearance #${i}">
                   #${i} ${escapeHtml(t || 'Untitled')} ✎
                 </span>
               `);
-            }
-            return themePills.join('');
-          })()}
+          }
+          return themePills.join('');
+        })()}
         </div>
       `;
     }
@@ -706,16 +706,16 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.modelsListContainer.innerHTML = `
       <div class="models-grid">
         ${models.map((model, idx) => {
-          // Calculate appearances summary for this model
-          let looksAssigned = 0;
-          for (let i = 1; i <= activeShow.catwalkAppearances; i++) {
-            const ass = store.getAssignment(activeShow.id, model.id, i);
-            if ((ass.clothingIds && ass.clothingIds.length) || (ass.jewelleryIds && ass.jewelleryIds.length) || ass.footwearId) {
-              looksAssigned++;
-            }
-          }
+      // Calculate appearances summary for this model
+      let looksAssigned = 0;
+      for (let i = 1; i <= activeShow.catwalkAppearances; i++) {
+        const ass = store.getAssignment(activeShow.id, model.id, i);
+        if ((ass.clothingIds && ass.clothingIds.length) || (ass.jewelleryIds && ass.jewelleryIds.length) || ass.footwearId) {
+          looksAssigned++;
+        }
+      }
 
-          return `
+      return `
             <div class="model-card" data-model-id="${model.id}">
               <div class="model-card-header">
                 <div class="walk-order-badge">
@@ -751,7 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
           `;
-        }).join('')}
+    }).join('')}
       </div>
     `;
   }
@@ -907,8 +907,8 @@ document.addEventListener('DOMContentLoaded', () => {
           </thead>
           <tbody>
             ${items.map(item => {
-              const usage = store.getItemUsageCount(activeShow.id, item.id);
-              return `
+      const usage = store.getItemUsageCount(activeShow.id, item.id);
+      return `
                 <tr class="item-row" data-item-id="${item.id}">
                   <td>
                     <span class="badge-cat badge-${item.category}">
@@ -951,7 +951,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   </td>
                 </tr>
               `;
-            }).join('')}
+    }).join('')}
           </tbody>
         </table>
       </div>
@@ -1295,8 +1295,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <select id="select-clone-source" class="form-input form-input-sm" style="width: auto;">
           <option value="">-- Choose source --</option>
           ${Array.from({ length: activeShow.catwalkAppearances }, (_, i) => i + 1)
-            .filter(app => app !== appearanceIndex)
-            .map(app => `<option value="${app}">Appearance #${app}</option>`).join('')}
+        .filter(app => app !== appearanceIndex)
+        .map(app => `<option value="${app}">Appearance #${app}</option>`).join('')}
         </select>
         <button class="btn btn-secondary btn-sm" onclick="window.app.cloneOutfitFromSelected()">Apply Copy</button>
       </div>
@@ -1315,9 +1315,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div class="items-picker-scroll">
             ${clothingAll.length > 0 ? clothingAll.map(item => {
-              const isSelected = assignment.clothingIds && assignment.clothingIds.includes(item.id);
-              const isFull = !isSelected && clothingItems.length >= 4;
-              return `
+          const isSelected = assignment.clothingIds && assignment.clothingIds.includes(item.id);
+          const isFull = !isSelected && clothingItems.length >= 4;
+          return `
                 <div class="picker-item-card ${isSelected ? 'selected' : ''} ${isFull ? 'disabled-item' : ''}" 
                      onclick="window.app.toggleItemInBuilder('${item.id}')">
                   <div class="picker-check">
@@ -1329,7 +1329,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>
                 </div>
               `;
-            }).join('') : '<p class="empty-col">No clothing items in catalogue. Add some in Wardrobe tab.</p>'}
+        }).join('') : '<p class="empty-col">No clothing items in catalogue. Add some in Wardrobe tab.</p>'}
           </div>
         </div>
 
@@ -1345,9 +1345,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div class="items-picker-scroll">
             ${jewelleryAll.length > 0 ? jewelleryAll.map(item => {
-              const isSelected = assignment.jewelleryIds && assignment.jewelleryIds.includes(item.id);
-              const isFull = !isSelected && jewelleryItems.length >= 4;
-              return `
+          const isSelected = assignment.jewelleryIds && assignment.jewelleryIds.includes(item.id);
+          const isFull = !isSelected && jewelleryItems.length >= 4;
+          return `
                 <div class="picker-item-card ${isSelected ? 'selected' : ''} ${isFull ? 'disabled-item' : ''}" 
                      onclick="window.app.toggleItemInBuilder('${item.id}')">
                   <div class="picker-check">
@@ -1359,7 +1359,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>
                 </div>
               `;
-            }).join('') : '<p class="empty-col">No jewellery items in catalogue.</p>'}
+        }).join('') : '<p class="empty-col">No jewellery items in catalogue.</p>'}
           </div>
         </div>
 
@@ -1375,8 +1375,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div class="items-picker-scroll">
             ${footwearAll.length > 0 ? footwearAll.map(item => {
-              const isSelected = assignment.footwearId === item.id;
-              return `
+          const isSelected = assignment.footwearId === item.id;
+          return `
                 <div class="picker-item-card ${isSelected ? 'selected' : ''}" 
                      onclick="window.app.toggleItemInBuilder('${item.id}')">
                   <div class="picker-check">
@@ -1388,7 +1388,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>
                 </div>
               `;
-            }).join('') : '<p class="empty-col">No footwear items in catalogue.</p>'}
+        }).join('') : '<p class="empty-col">No footwear items in catalogue.</p>'}
           </div>
         </div>
       </div>
@@ -1413,9 +1413,9 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.customerAppearanceFilterSelect.innerHTML = `
       <option value="all">All Appearances (1 - ${totalAppearances})</option>
       ${Array.from({ length: totalAppearances }, (_, i) => i + 1).map(n => {
-        const theme = store.getAppearanceTheme(activeShow.id, n);
-        return `<option value="${n}">Appearance #${n}${theme ? ` — ${escapeHtml(theme)}` : ''}</option>`;
-      }).join('')}
+      const theme = store.getAppearanceTheme(activeShow.id, n);
+      return `<option value="${n}">Appearance #${n}${theme ? ` — ${escapeHtml(theme)}` : ''}</option>`;
+    }).join('')}
     `;
   }
 
