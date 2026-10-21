@@ -8,7 +8,7 @@
   /* Page Setup */
   @page {
     size: A4 portrait;
-    margin: 15mm 12mm 15mm 12mm;
+    margin: 10mm 12mm 15mm 10mm;
   }
 
   /* Reset body & background */
@@ -119,9 +119,18 @@
     text-align: left !important;
   }
 
-  .report-logo-img,
-  .brand-logo-img {
+  .report-logo-img {
+    height: 40pt !important;
+    width: auto !important;
+    object-fit: contain !important;
+    display: block !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+    margin-top: 10pt !important;
+  }
 
+  }
+  .brand-logo-img {
     height: 40pt !important;
     width: auto !important;
     object-fit: contain !important;
@@ -334,7 +343,7 @@
 
   .lookbook-subtitle {
     grid-column: 2 !important;
-    text-align: center !important;
+    text-align:  !important;
     color: #555555 !important;
     font-size: 10pt !important;
     margin: 2pt 0 0 0 !important;
@@ -425,9 +434,10 @@
 
   .total-val {
     color: #000000 !important;
-    font-family: inherit !important;
-    font-size: 10pt !important;
-    font-weight: 700 !important;
+    font-size: 12pt !important;
+    border-bottom: none !important;
+    padding: 0 10pt !important;  
+    font-weight: 700 !important;  
   }
 
   .lookbook-items-table {
@@ -459,12 +469,11 @@
 
   .col-price {
     color: #111111 !important;
-    font-family: inherit !important;
+    font-family: var(--font-serif);
     font-size: 10pt !important;
-    font-weight: 500 !important;
-    text-align: right !important;
     border-bottom: none !important;
     padding: 0 10pt !important;
+    font-weight: 700 !important; 
   }
 
   .customer-grand-summary {
