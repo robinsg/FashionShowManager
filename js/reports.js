@@ -64,8 +64,6 @@ class FashionReportsEngine {
 
     const totalAppearances = show.catwalkAppearances;
 
-    const isDark = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark';
-    const logoSrc = isDark ? 'assets/images/heidi-logo_360x-inverted.png' : 'assets/images/heidi-logo_360x-removebg.png';
 
     let html = `
       <div class="report-document staff-report-theme" id="printable-staff-report">
@@ -186,8 +184,6 @@ class FashionReportsEngine {
       }
     }
 
-    const isDark = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark';
-    const logoSrc = isDark ? 'assets/images/heidi-logo_360x-inverted.png' : 'assets/images/heidi-logo_360x-removebg.png';
 
     let html = `
       <div class="report-document customer-report-theme" id="printable-customer-report">
@@ -195,7 +191,8 @@ class FashionReportsEngine {
         <header class="lookbook-cover-header">
           <div class="editorial-branding">
             <div class="report-logo-wrapper left-logo">
-              <img src="${logoSrc}" alt="Heidi Boutique Logo" class="report-logo-img">
+              <img src="assets/images/heidi-logo_360x-removebg.png" alt="Heidi Boutique Logo" class="report-logo-img report-logo-light">
+              <img src="assets/images/heidi-logo_360x-inverted.png" alt="Heidi Boutique Logo" class="report-logo-img report-logo-dark">
             </div>
             <h1 class="lookbook-title">${this.escapeHtml(show.name)}</h1>
           </div>
@@ -319,21 +316,10 @@ class FashionReportsEngine {
       document.body.classList.add('printing-customer');
     }
 
-    // Ensure logos switch to light-background logo for printing
-    const reportLogos = document.querySelectorAll('.report-logo-img');
-    const prevSrcs = [];
-    reportLogos.forEach((img, i) => {
-      prevSrcs[i] = img.src;
-      img.src = 'assets/images/heidi-logo_360x-removebg.png';
-    });
-
     window.print();
 
     // Clean up
     setTimeout(() => {
-      reportLogos.forEach((img, i) => {
-        if (prevSrcs[i]) img.src = prevSrcs[i];
-      });
       document.body.classList.remove('printing-staff', 'printing-customer');
       document.title = oldTitle;
     }, 1000);

@@ -121,13 +121,28 @@
 
   .report-logo-img,
   .brand-logo-img {
-    content: url("../assets/images/heidi-logo_360x-removebg.png") !important;
+
     height: 40pt !important;
     width: auto !important;
     object-fit: contain !important;
     display: block !important;
     margin-left: 0 !important;
     margin-right: auto !important;
+  }
+
+  /* Printed reports always use light (removebg) logo on white paper */
+  .report-logo-light,
+  [data-theme="dark"] .report-logo-light,
+  .brand-logo-light,
+  [data-theme="dark"] .brand-logo-light {
+    display: block !important;
+  }
+
+  .report-logo-dark,
+  [data-theme="dark"] .report-logo-dark,
+  .brand-logo-dark,
+  [data-theme="dark"] .brand-logo-dark {
+    display: none !important;
   }
 
   .staff-report-theme .brand-eyebrow {
