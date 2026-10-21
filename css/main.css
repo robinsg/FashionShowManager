@@ -202,6 +202,27 @@ body::before {
   justify-content: center;
 }
 
+/* Brand and Report Logo Theme Display */
+.brand-logo-light,
+.report-logo-light {
+  display: block;
+}
+
+.brand-logo-dark,
+.report-logo-dark {
+  display: none;
+}
+
+[data-theme="dark"] .brand-logo-light,
+[data-theme="dark"] .report-logo-light {
+  display: none;
+}
+
+[data-theme="dark"] .brand-logo-dark,
+[data-theme="dark"] .report-logo-dark {
+  display: block;
+}
+
 .report-logo-img {
   height: 54px;
   width: auto;

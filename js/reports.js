@@ -64,6 +64,7 @@ class FashionReportsEngine {
 
     const totalAppearances = show.catwalkAppearances;
 
+
     let html = `
       <div class="report-document staff-report-theme" id="printable-staff-report">
         <!-- Print Header -->
@@ -183,13 +184,15 @@ class FashionReportsEngine {
       }
     }
 
+
     let html = `
       <div class="report-document customer-report-theme" id="printable-customer-report">
         <!-- Luxury Lookbook Cover / Header -->
         <header class="lookbook-cover-header">
           <div class="editorial-branding">
             <div class="report-logo-wrapper left-logo">
-              <img src="https://heidiboutique.co.uk/cdn/shop/files/heidi_boutique_logo_1000px.png" alt="Heidi Boutique Logo" class="report-logo-img">
+              <img src="assets/images/heidi-logo_360x-removebg.png" alt="Heidi Boutique Logo" class="report-logo-img report-logo-light">
+              <img src="assets/images/heidi-logo_360x-inverted.png" alt="Heidi Boutique Logo" class="report-logo-img report-logo-dark">
             </div>
             <h1 class="lookbook-title">${this.escapeHtml(show.name)}</h1>
           </div>
