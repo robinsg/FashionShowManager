@@ -9,6 +9,17 @@
     content="Management system for fashion shows: model rosters, catwalk appearances, clothing, jewellery, footwear, retail pricing, and printable staff and customer reports.">
   <link rel="stylesheet" href="css/main.css?v=2.1">
   <link rel="stylesheet" href="css/print.css?v=2.1" media="print">
+  <script>
+    // Early theme initialization to prevent flash of wrong theme / logo
+    (function () {
+      try {
+        var savedTheme = localStorage.getItem('heidiboutique_theme');
+        if (savedTheme === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) { }
+    })();
+  </script>
 </head>
 
 <body>
@@ -20,7 +31,17 @@
         <!-- Brand Mark -->
         <div class="brand-section">
           <a href="https://heidiboutique.co.uk/" target="_blank" rel="noopener" class="brand-logo-link">
-            <img src="https://heidiboutique.co.uk/cdn/shop/files/heidi_boutique_logo_1000px.png" alt="Heidi Boutique Logo" class="brand-logo-img">
+            <img id="brand-logo-img" src="assets/images/heidi-logo_360x-removebg.png" alt="Heidi Boutique Logo" class="brand-logo-img">
+            <script>
+              (function () {
+                try {
+                  if (document.documentElement.getAttribute('data-theme') === 'dark') {
+                    var logo = document.getElementById('brand-logo-img');
+                    if (logo) logo.src = 'assets/images/heidi-logo_360x-inverted.png';
+                  }
+                } catch (e) { }
+              })();
+            </script>
           </a>
           <div>
             <h1 class="brand-title">

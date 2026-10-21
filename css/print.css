@@ -119,7 +119,9 @@
     text-align: left !important;
   }
 
-  .report-logo-img {
+  .report-logo-img,
+  .brand-logo-img {
+    content: url("../assets/images/heidi-logo_360x-removebg.png") !important;
     height: 40pt !important;
     width: auto !important;
     object-fit: contain !important;

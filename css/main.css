@@ -202,6 +202,11 @@ body::before {
   justify-content: center;
 }
 
+[data-theme="dark"] .brand-logo-img,
+[data-theme="dark"] .report-logo-img {
+  content: url("../assets/images/heidi-logo_360x-inverted.png");
+}
+
 .report-logo-img {
   height: 54px;
   width: auto;

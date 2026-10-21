@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const elements = {
     // Show Selector & Theme Toggle
     showSelect: document.getElementById('current-show-select'),
+    brandLogoImg: document.getElementById('brand-logo-img') || document.querySelector('.brand-logo-img'),
     dbStatusPill: document.getElementById('db-status-pill'),
     dbStatusText: document.getElementById('db-status-text'),
     btnNewShow: document.getElementById('btn-new-show'),
@@ -128,12 +129,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  const LOGO_LIGHT = 'assets/images/heidi-logo_360x-removebg.png';
+  const LOGO_DARK = 'assets/images/heidi-logo_360x-inverted.png';
+
+  function updateLogos(isDark) {
+    const logoSrc = isDark ? LOGO_DARK : LOGO_LIGHT;
+    const brandLogos = document.querySelectorAll('.brand-logo-img');
+    brandLogos.forEach(img => {
+      img.src = logoSrc;
+    });
+    const reportLogos = document.querySelectorAll('.report-logo-img');
+    reportLogos.forEach(img => {
+      img.src = logoSrc;
+    });
+  }
+
   function initTheme() {
     const savedTheme = localStorage.getItem('heidiboutique_theme') || 'light';
     applyTheme(savedTheme);
   }
 
   function applyTheme(theme) {
+    const isDark = theme === 'dark';
     if (theme === 'dark') {
       document.documentElement.setAttribute('data-theme', 'dark');
       if (elements.btnThemeToggle) elements.btnThemeToggle.textContent = '☀️ Light Mode';
@@ -141,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.documentElement.removeAttribute('data-theme');
       if (elements.btnThemeToggle) elements.btnThemeToggle.textContent = '🌙 Dark Mode';
     }
+    updateLogos(isDark);
     localStorage.setItem('heidiboutique_theme', theme);
   }
 
@@ -187,6 +205,15 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.btnManageShows.addEventListener('click', () => {
       renderShowsManagerList();
       openModal(elements.modalManageShows);
+    });
+
+    // Ensure logos switch to light-background logo during browser print and restore afterwards
+    window.addEventListener('beforeprint', () => {
+      updateLogos(false);
+    });
+    window.addEventListener('afterprint', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      updateLogos(isDark);
     });
 
     // Theme toggle
