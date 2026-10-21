@@ -127,6 +127,30 @@ const DEFAULT_INITIAL_DATA = {
   ]
 };
 
+function generateItemId(name, price, existingItemIds = []) {
+  if (!name || typeof name !== 'string') name = 'item';
+  const words = name.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().split(/\s+/).filter(Boolean);
+  let prefix = '';
+  if (words.length >= 2) {
+    prefix = words[0].slice(0, 3) + words[1].slice(0, 3);
+  } else if (words.length === 1) {
+    prefix = words[0].slice(0, 6);
+  } else {
+    prefix = 'item';
+  }
+  if (!prefix) prefix = 'item';
+  const priceNum = Math.floor(Math.abs(parseFloat(price) || 0));
+  let baseId = `${prefix}${priceNum}`.toLowerCase();
+  let finalId = baseId;
+  let counter = 2;
+  const existingSet = new Set((existingItemIds || []).map(id => (id || '').toLowerCase()));
+  while (existingSet.has(finalId)) {
+    finalId = `${baseId}-${counter}`;
+    counter++;
+  }
+  return finalId;
+}
+
 function getApiUrl(endpoint) {
   if (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null' && window.location.origin !== 'file://') {
     return endpoint;
@@ -550,7 +574,7 @@ class FashionShowStore {
     return (show.items || []).find(i => i.id === itemId) || null;
   }
 
-  addItem(showId, { name, category, price }) {
+  addItem(showId, { name, category, price, itemId }) {
     const show = showId ? this.data.shows.find(s => s.id === showId) : this.getActiveShow();
     if (!show) throw new Error('Show not found');
 
@@ -566,14 +590,19 @@ class FashionShowStore {
       throw new Error('Valid retail price is required.');
     }
 
+    if (!show.items) show.items = [];
+    const existingCodes = show.items.map(i => i.itemId).filter(Boolean);
+    const roundedPrice = Math.round(parsedPrice * 100) / 100;
+    const code = (itemId && typeof itemId === 'string') ? itemId.toLowerCase() : generateItemId(trimmedName, roundedPrice, existingCodes);
+
     const newItem = {
       id: 'itm_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      itemId: code,
       name: trimmedName,
       category,
-      price: Math.round(parsedPrice * 100) / 100
+      price: roundedPrice
     };
 
-    if (!show.items) show.items = [];
     show.items.push(newItem);
     this.saveData();
     return newItem;
@@ -597,6 +626,16 @@ class FashionShowStore {
       if (!isNaN(parsed) && parsed >= 0) {
         item.price = Math.round(parsed * 100) / 100;
       }
+    }
+
+    if (updates.itemId) {
+      item.itemId = updates.itemId.toLowerCase();
+    } else if (updates.name !== undefined || updates.price !== undefined) {
+      const existingCodes = show.items.filter(i => i.id !== itemId).map(i => i.itemId).filter(Boolean);
+      item.itemId = generateItemId(item.name, item.price, existingCodes);
+    } else if (!item.itemId) {
+      const existingCodes = show.items.filter(i => i.id !== itemId).map(i => i.itemId).filter(Boolean);
+      item.itemId = generateItemId(item.name, item.price, existingCodes);
     }
 
     this.saveData();
