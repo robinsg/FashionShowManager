@@ -6,13 +6,13 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { FashionShowDatabase, DB_FILE_PATH } = require('./db');
+const { FashionShowDatabase, getDbFilePath } = require('./db');
 
 const PORT = parseInt(process.env.PORT, 10) || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
-// Initialize SQLite Database
-const db = new FashionShowDatabase(DB_FILE_PATH);
+// Initialize SQLite Database dynamically using getDbFilePath()
+let db = new FashionShowDatabase(getDbFilePath());
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -73,6 +73,12 @@ async function handleApiRequest(req, res, pathname) {
   }
 
   try {
+    // Ensure database connection is targeting the current getDbFilePath()
+    if (db.dbPath !== getDbFilePath()) {
+      try { db.close(); } catch (e) {}
+      db = new FashionShowDatabase(getDbFilePath());
+    }
+
     // GET /api/status - Check SQLite database status
     if (pathname === '/api/status' && method === 'GET') {
       const data = db.getAllData();
@@ -101,7 +107,8 @@ async function handleApiRequest(req, res, pathname) {
     // POST /api/migrate - Migrate legacy localStorage data to SQLite
     if (pathname === '/api/migrate' && method === 'POST') {
       const body = await parseJsonBody(req);
-      const result = db.migrateFromLocalStorage(body);
+      const allowOverwrite = Boolean(body.overwrite || body.force);
+      const result = db.migrateFromLocalStorage(body, { overwrite: allowOverwrite });
       console.log(`[SQLite Migration] Migrated ${result.showsCount} shows from legacy localStorage to SQLite.`);
       return sendJson(res, 200, {
         success: true,
@@ -113,6 +120,10 @@ async function handleApiRequest(req, res, pathname) {
 
     // POST /api/reset - Reset SQLite database to default initial demonstration data
     if (pathname === '/api/reset' && method === 'POST') {
+      const body = await parseJsonBody(req);
+      if (!body.confirm) {
+        return sendJson(res, 400, { error: 'Database reset requires explicit confirmation ({ confirm: true }).' });
+      }
       db.resetToDefault();
       const freshData = db.getAllData();
       return sendJson(res, 200, { success: true, data: freshData });

@@ -2,13 +2,15 @@
  * Automated Test Suite for Fashion Show Manager SQLite Integration
  */
 
+const path = require('path');
+// Ensure process.env.SQLITE_DB_PATH is set to test_suite.db BEFORE requiring db or server modules
+const TEST_DB_PATH = path.join(__dirname, 'test_suite.db');
+process.env.SQLITE_DB_PATH = TEST_DB_PATH;
+
 const assert = require('assert');
 const fs = require('fs');
-const path = require('path');
 const { FashionShowDatabase, DEFAULT_INITIAL_DATA, generateItemId } = require('./db');
 const { server } = require('./server');
-
-const TEST_DB_PATH = path.join(__dirname, 'test_suite.db');
 
 async function runTests() {
   console.log('--- Starting SQLite & API Verification Tests ---');
@@ -152,7 +154,7 @@ async function runTests() {
     ]
   };
 
-  const migrationResult = db.migrateFromLocalStorage(mockLocalStorageData);
+  const migrationResult = db.migrateFromLocalStorage(mockLocalStorageData, { overwrite: true });
   assert.strictEqual(migrationResult.success, true);
   assert.strictEqual(migrationResult.showsCount, 1);
 
@@ -163,7 +165,6 @@ async function runTests() {
   console.log('   ✓ Legacy localStorage migration verified.');
 
   db.close();
-  if (fs.existsSync(TEST_DB_PATH)) fs.unlinkSync(TEST_DB_PATH);
 
   // 6. Test HTTP Server SQLite REST API
   console.log('6. Testing HTTP Server SQLite API...');
@@ -183,11 +184,19 @@ async function runTests() {
         assert.ok(Array.isArray(apiData.shows));
         assert.ok(apiData.shows.length > 0);
 
-        // Migrate endpoint
-        const resMigrate = await fetch(`http://127.0.0.1:${TEST_PORT}/api/migrate`, {
+        // Migrate endpoint - without overwrite flag when database has data should fail
+        const resMigrateFail = await fetch(`http://127.0.0.1:${TEST_PORT}/api/migrate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(DEFAULT_INITIAL_DATA)
+        });
+        assert.strictEqual(resMigrateFail.status, 400, 'Migration without overwrite flag should return 400 when DB is non-empty');
+
+        // Migrate endpoint - with overwrite flag should succeed
+        const resMigrate = await fetch(`http://127.0.0.1:${TEST_PORT}/api/migrate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...DEFAULT_INITIAL_DATA, overwrite: true })
         });
         const migrateJson = await resMigrate.json();
         assert.strictEqual(migrateJson.success, true);

@@ -7,7 +7,11 @@ const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
 const fs = require('fs');
 
-const DB_FILE_PATH = process.env.SQLITE_DB_PATH || path.join(__dirname, 'fashion_show.db');
+function getDbFilePath() {
+  return process.env.SQLITE_DB_PATH || path.join(__dirname, 'fashion_show.db');
+}
+
+const DB_FILE_PATH = getDbFilePath();
 
 // Default initial luxury fashion show dataset
 const DEFAULT_INITIAL_DATA = {
@@ -142,7 +146,7 @@ function generateItemId(name, price, existingItemIds = []) {
 }
 
 class FashionShowDatabase {
-  constructor(dbPath = DB_FILE_PATH) {
+  constructor(dbPath = getDbFilePath()) {
     this.dbPath = dbPath;
     this.db = new DatabaseSync(this.dbPath);
     this.initSchema();
@@ -472,9 +476,9 @@ class FashionShowDatabase {
   }
 
   /**
-   * Migrate data from legacy localStorage payload
+   * Migrate data from legacy localStorage payload with overwrite safety checks
    */
-  migrateFromLocalStorage(payload) {
+  migrateFromLocalStorage(payload, options = {}) {
     if (!payload) throw new Error('No data payload provided for migration.');
 
     let parsed = payload;
@@ -488,6 +492,14 @@ class FashionShowDatabase {
 
     if (!parsed || !Array.isArray(parsed.shows) || parsed.shows.length === 0) {
       throw new Error('Legacy data payload contains no valid fashion shows.');
+    }
+
+    // Safety check: if DB already contains fashion show data and overwrite flag is not set, reject migration
+    const showCount = this.db.prepare('SELECT COUNT(*) AS count FROM shows').get().count;
+    const allowOverwrite = Boolean(options.overwrite || parsed.overwrite || parsed.force);
+
+    if (showCount > 0 && !allowOverwrite) {
+      throw new Error('Database already contains existing fashion show data. Migration aborted to prevent accidental data loss. Pass overwrite flag to force replacement.');
     }
 
     return this.importData(parsed);
@@ -949,6 +961,7 @@ class FashionShowDatabase {
 module.exports = {
   FashionShowDatabase,
   DEFAULT_INITIAL_DATA,
+  getDbFilePath,
   DB_FILE_PATH,
   generateItemId
 };
