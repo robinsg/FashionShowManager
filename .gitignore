@@ -99,3 +99,4 @@ coverage/
 *.sqlite3
 test_*.db
 .server.pid
+
