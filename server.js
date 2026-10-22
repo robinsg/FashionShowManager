@@ -11,8 +11,18 @@ const { FashionShowDatabase, getDbFilePath } = require('./db');
 const PORT = parseInt(process.env.PORT, 10) || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
-// Initialize SQLite Database dynamically using getDbFilePath()
-let db = new FashionShowDatabase(getDbFilePath());
+// Helper to retrieve or lazy-initialize database connection
+let db = null;
+function getDb() {
+  const currentPath = getDbFilePath();
+  if (!db || db.dbPath !== currentPath) {
+    if (db) {
+      try { db.close(); } catch (e) {}
+    }
+    db = new FashionShowDatabase(currentPath);
+  }
+  return db;
+}
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -73,19 +83,15 @@ async function handleApiRequest(req, res, pathname) {
   }
 
   try {
-    // Ensure database connection is targeting the current getDbFilePath()
-    if (db.dbPath !== getDbFilePath()) {
-      try { db.close(); } catch (e) {}
-      db = new FashionShowDatabase(getDbFilePath());
-    }
+    const database = getDb();
 
     // GET /api/status - Check SQLite database status
     if (pathname === '/api/status' && method === 'GET') {
-      const data = db.getAllData();
+      const data = database.getAllData();
       return sendJson(res, 200, {
         status: 'ok',
         engine: 'SQLite',
-        databaseFile: path.basename(db.dbPath),
+        databaseFile: path.basename(database.dbPath),
         activeShowId: data.activeShowId,
         showsCount: data.shows.length
       });
@@ -93,14 +99,14 @@ async function handleApiRequest(req, res, pathname) {
 
     // GET /api/data - Retrieve complete fashion show dataset from SQLite
     if (pathname === '/api/data' && method === 'GET') {
-      const data = db.getAllData();
+      const data = database.getAllData();
       return sendJson(res, 200, data);
     }
 
     // PUT or POST /api/data - Save entire dataset to SQLite
     if (pathname === '/api/data' && (method === 'PUT' || method === 'POST')) {
       const body = await parseJsonBody(req);
-      const result = db.importData(body);
+      const result = database.importData(body);
       return sendJson(res, 200, result);
     }
 
@@ -108,7 +114,7 @@ async function handleApiRequest(req, res, pathname) {
     if (pathname === '/api/migrate' && method === 'POST') {
       const body = await parseJsonBody(req);
       const allowOverwrite = Boolean(body.overwrite || body.force);
-      const result = db.migrateFromLocalStorage(body, { overwrite: allowOverwrite });
+      const result = database.migrateFromLocalStorage(body, { overwrite: allowOverwrite });
       console.log(`[SQLite Migration] Migrated ${result.showsCount} shows from legacy localStorage to SQLite.`);
       return sendJson(res, 200, {
         success: true,
@@ -124,8 +130,8 @@ async function handleApiRequest(req, res, pathname) {
       if (!body.confirm) {
         return sendJson(res, 400, { error: 'Database reset requires explicit confirmation ({ confirm: true }).' });
       }
-      db.resetToDefault();
-      const freshData = db.getAllData();
+      database.resetToDefault();
+      const freshData = database.getAllData();
       return sendJson(res, 200, { success: true, data: freshData });
     }
 
@@ -135,14 +141,14 @@ async function handleApiRequest(req, res, pathname) {
       if (!body.showId) {
         return sendJson(res, 400, { error: 'showId is required' });
       }
-      db.setActiveShowId(body.showId);
+      database.setActiveShowId(body.showId);
       return sendJson(res, 200, { success: true, activeShowId: body.showId });
     }
 
     // POST /api/shows - Create a new fashion show
     if (pathname === '/api/shows' && method === 'POST') {
       const body = await parseJsonBody(req);
-      const newShow = db.createShow(body);
+      const newShow = database.createShow(body);
       return sendJson(res, 201, newShow);
     }
 
@@ -154,7 +160,7 @@ async function handleApiRequest(req, res, pathname) {
 
       // GET /api/shows/:id
       if (subPath === '' && method === 'GET') {
-        const show = db.getShowById(showId);
+        const show = database.getShowById(showId);
         if (!show) return sendJson(res, 404, { error: 'Show not found' });
         return sendJson(res, 200, show);
       }
@@ -162,21 +168,21 @@ async function handleApiRequest(req, res, pathname) {
       // PUT /api/shows/:id
       if (subPath === '' && method === 'PUT') {
         const body = await parseJsonBody(req);
-        const updated = db.updateShow(showId, body);
+        const updated = database.updateShow(showId, body);
         if (!updated) return sendJson(res, 404, { error: 'Show not found' });
         return sendJson(res, 200, updated);
       }
 
       // DELETE /api/shows/:id
       if (subPath === '' && method === 'DELETE') {
-        const remainingId = db.deleteShow(showId);
+        const remainingId = database.deleteShow(showId);
         return sendJson(res, 200, { success: true, activeShowId: remainingId });
       }
 
       // POST /api/shows/:id/duplicate
       if (subPath === '/duplicate' && method === 'POST') {
         const body = await parseJsonBody(req);
-        const copy = db.duplicateShow(showId, body.name);
+        const copy = database.duplicateShow(showId, body.name);
         if (!copy) return sendJson(res, 404, { error: 'Source show not found' });
         return sendJson(res, 201, copy);
       }
@@ -184,14 +190,14 @@ async function handleApiRequest(req, res, pathname) {
       // POST /api/shows/:id/models
       if (subPath === '/models' && method === 'POST') {
         const body = await parseJsonBody(req);
-        const newModel = db.addModel(showId, body);
+        const newModel = database.addModel(showId, body);
         return sendJson(res, 201, newModel);
       }
 
       // POST /api/shows/:id/models/reorder
       if (subPath === '/models/reorder' && method === 'POST') {
         const body = await parseJsonBody(req);
-        db.reorderModels(showId, body.modelIdList || []);
+        database.reorderModels(showId, body.modelIdList || []);
         return sendJson(res, 200, { success: true });
       }
 
@@ -201,11 +207,11 @@ async function handleApiRequest(req, res, pathname) {
         const modelId = decodeURIComponent(modelMatch[1]);
         if (method === 'PUT') {
           const body = await parseJsonBody(req);
-          const updated = db.updateModel(showId, modelId, body);
+          const updated = database.updateModel(showId, modelId, body);
           return sendJson(res, 200, updated);
         }
         if (method === 'DELETE') {
-          db.deleteModel(showId, modelId);
+          database.deleteModel(showId, modelId);
           return sendJson(res, 200, { success: true });
         }
       }
@@ -213,7 +219,7 @@ async function handleApiRequest(req, res, pathname) {
       // POST /api/shows/:id/items
       if (subPath === '/items' && method === 'POST') {
         const body = await parseJsonBody(req);
-        const newItem = db.addItem(showId, body);
+        const newItem = database.addItem(showId, body);
         return sendJson(res, 201, newItem);
       }
 
@@ -223,11 +229,11 @@ async function handleApiRequest(req, res, pathname) {
         const itemId = decodeURIComponent(itemMatch[1]);
         if (method === 'PUT') {
           const body = await parseJsonBody(req);
-          const updated = db.updateItem(showId, itemId, body);
+          const updated = database.updateItem(showId, itemId, body);
           return sendJson(res, 200, updated);
         }
         if (method === 'DELETE') {
-          db.deleteItem(showId, itemId);
+          database.deleteItem(showId, itemId);
           return sendJson(res, 200, { success: true });
         }
       }
@@ -239,11 +245,11 @@ async function handleApiRequest(req, res, pathname) {
         const appIndex = parseInt(assignMatch[2], 10);
         if (method === 'PUT') {
           const body = await parseJsonBody(req);
-          const updated = db.setAssignment(showId, modelId, appIndex, body);
+          const updated = database.setAssignment(showId, modelId, appIndex, body);
           return sendJson(res, 200, updated);
         }
         if (method === 'DELETE') {
-          db.clearAssignment(showId, modelId, appIndex);
+          database.clearAssignment(showId, modelId, appIndex);
           return sendJson(res, 200, { success: true });
         }
       }
@@ -254,7 +260,7 @@ async function handleApiRequest(req, res, pathname) {
         const appIndex = parseInt(themeMatch[1], 10);
         if (method === 'PUT') {
           const body = await parseJsonBody(req);
-          const updatedThemes = db.setAppearanceTheme(showId, appIndex, body.theme);
+          const updatedThemes = database.setAppearanceTheme(showId, appIndex, body.theme);
           return sendJson(res, 200, { success: true, appearanceThemes: updatedThemes });
         }
       }
@@ -316,13 +322,23 @@ function cleanupPidFile() {
   try {
     if (fs.existsSync(PID_FILE)) fs.unlinkSync(PID_FILE);
   } catch (e) {}
+  if (db) {
+    try { db.close(); db = null; } catch (e) {}
+  }
+}
+
+function closeDatabaseConnection() {
+  if (db) {
+    try { db.close(); db = null; } catch (e) {}
+  }
 }
 
 if (require.main === module) {
   server.listen(PORT, HOST, () => {
     fs.writeFileSync(PID_FILE, String(process.pid));
+    const database = getDb();
     console.log(`Fashion Show Manager server running with SQLite at http://${HOST === '0.0.0.0' ? '127.0.0.1' : HOST}:${PORT}/`);
-    console.log(`SQLite database connected: ${db.dbPath}`);
+    console.log(`SQLite database connected: ${database.dbPath}`);
   });
 
   process.on('SIGINT', () => { cleanupPidFile(); process.exit(0); });
@@ -330,4 +346,4 @@ if (require.main === module) {
   process.on('exit', () => { cleanupPidFile(); });
 }
 
-module.exports = { server, db };
+module.exports = { server, getDb, closeDatabaseConnection };

@@ -10,12 +10,22 @@ process.env.SQLITE_DB_PATH = TEST_DB_PATH;
 const assert = require('assert');
 const fs = require('fs');
 const { FashionShowDatabase, DEFAULT_INITIAL_DATA, generateItemId } = require('./db');
-const { server } = require('./server');
+const { server, closeDatabaseConnection } = require('./server');
+
+function safeUnlinkSync(file) {
+  try {
+    if (fs.existsSync(file)) fs.unlinkSync(file);
+  } catch (e) {
+    // Ignore unlock race conditions
+  }
+}
 
 async function runTests() {
   console.log('--- Starting SQLite & API Verification Tests ---');
 
-  if (fs.existsSync(TEST_DB_PATH)) fs.unlinkSync(TEST_DB_PATH);
+  safeUnlinkSync(TEST_DB_PATH);
+  safeUnlinkSync(`${TEST_DB_PATH}-shm`);
+  safeUnlinkSync(`${TEST_DB_PATH}-wal`);
 
   // 1. Test Database Initialization & Seeding
   console.log('1. Testing Database Initialization & Initial Seed...');
@@ -213,11 +223,16 @@ async function runTests() {
         assert.strictEqual(themeJson.appearanceThemes['1'], 'Denim Chic');
 
         server.close(() => {
+          closeDatabaseConnection();
+          safeUnlinkSync(TEST_DB_PATH);
+          safeUnlinkSync(`${TEST_DB_PATH}-shm`);
+          safeUnlinkSync(`${TEST_DB_PATH}-wal`);
           console.log('   ✓ Server REST API endpoints verified.');
           resolve();
         });
       } catch (err) {
         server.close();
+        closeDatabaseConnection();
         reject(err);
       }
     });
