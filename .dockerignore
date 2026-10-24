@@ -1,0 +1,102 @@
+# ==============================================================================
+# Fashion Show Manager - .gitignore
+# ==============================================================================
+
+# Operating System Files
+# ----------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# Editor & IDE Directories
+# ------------------------
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# Node.js & Dependencies
+# ----------------------
+node_modules/
+jspm_packages/
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment Variables & Credentials
+# -----------------------------------
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+*.cert
+*.crt
+
+# Logs & Temporary Files
+# ----------------------
+*.log
+logs/
+temp/
+tmp/
+.cache/
+.system_generated/
+scratch/
+
+# Testing & Coverage
+# ------------------
+coverage/
+.nyc_output/
+
+# Application Backups / Local Data Exports
+# ----------------------------------------
+*.backup.json
+*fashion-show-export*.json
+
+# SQLite Database Files
+# ---------------------
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+test_*.db
+.server.pid
+
