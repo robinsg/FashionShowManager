@@ -84,6 +84,13 @@ scratch/
 coverage/
 .nyc_output/
 
+# Python Cache & Bytecode
+# -----------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
 # Application Backups / Local Data Exports
 # ----------------------------------------
 *.backup.json

@@ -1,0 +1,18 @@
+{
+    "python.defaultInterpreterPath": "python3",
+    "python.analysis.extraPaths": ["."],
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Args": ["--config=.flake8"],
+    "python.testing.unittestEnabled": true,
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s", ".",
+        "-p", "test_*.py"
+    ],
+    "antigravity.enabled": true,
+    "antigravity.agentMode": "expert",
+    "files.associations": {
+        "*.py": "python"
+    }
+}
