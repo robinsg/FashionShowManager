@@ -1,0 +1,106 @@
+{
+  "activeShowId": "show_2026_ss",
+  "shows": [
+    {
+      "id": "show_2026_ss",
+      "name": "LUMIÈRE // Haute Couture Spring/Summer 2026",
+      "season": "Spring/Summer",
+      "year": 2026,
+      "date": "2026-05-18",
+      "venue": "The Grand Pavilion Ballroom, Mayfair, London",
+      "currency": "£",
+      "catwalkAppearances": 4,
+      "appearanceThemes": {
+        "1": "Denim",
+        "2": "Leisureware",
+        "3": "Draped Eveningwear",
+        "4": "Grand Finale"
+      },
+      "models": [
+        {"id": "m1", "firstName": "Elena", "walkOrder": 1, "notes": "Show Opener. Wears sleek updos for appearances 1-2."},
+        {"id": "m2", "firstName": "Sophia", "walkOrder": 2, "notes": "Requires quick shoe swap between Appearance 2 and 3."},
+        {"id": "m3", "firstName": "Marcus", "walkOrder": 3, "notes": "Tailored fit; check blazer sleeve length."},
+        {"id": "m4", "firstName": "Amara", "walkOrder": 4, "notes": "Statement jewellery focus; delicate ear clasp."},
+        {"id": "m5", "firstName": "Chloe", "walkOrder": 5, "notes": "Show Closer (Finale look). Dramatic train."}
+      ],
+      "items": [
+        {"id": "c1", "itemId": "silorg950", "name": "Silk Organza Trench Coat with Belt", "category": "clothing", "price": 950.00},
+        {"id": "c2", "itemId": "hanchi1850", "name": "Hand-Pleated Chiffon Halter Gown", "category": "clothing", "price": 1850.00},
+        {"id": "c3", "itemId": "taidou780", "name": "Tailored Double-Breasted Wool Blazer", "category": "clothing", "price": 780.00},
+        {"id": "c4", "itemId": "higsil420", "name": "High-Waisted Silk Crepe Palazzo Trousers", "category": "clothing", "price": 420.00},
+        {"id": "c5", "itemId": "drasat340", "name": "Draped Satin Corset Bodice Top", "category": "clothing", "price": 340.00},
+        {"id": "c6", "itemId": "midvel890", "name": "Midnight Velvet Asymmetric Cape", "category": "clothing", "price": 890.00},
+        {"id": "c7", "itemId": "metjac460", "name": "Metallic Jacquard Tiered Midi Skirt", "category": "clothing", "price": 460.00},
+        {"id": "c8", "itemId": "scucas520", "name": "Sculptural Cashmere Turtleneck Knit", "category": "clothing", "price": 520.00},
+        {"id": "c9", "itemId": "emecut1250", "name": "Emerald Cut-Out Evening Slip Dress", "category": "clothing", "price": 1250.00},
+        {"id": "c10", "itemId": "strove610", "name": "Structured Oversized Tuxedo Waistcoat", "category": "clothing", "price": 610.00},
+        {"id": "j1", "itemId": "18kcha1100", "name": "18k Champagne Gold Pavé Choker", "category": "jewellery", "price": 1100.00},
+        {"id": "j2", "itemId": "casfre340", "name": "Cascading Freshwater Pearl Drop Earrings", "category": "jewellery", "price": 340.00},
+        {"id": "j3", "itemId": "hambra260", "name": "Hammered Brass Architectural Cuff Bangle", "category": "jewellery", "price": 260.00},
+        {"id": "j4", "itemId": "bessmo480", "name": "Bespoke Smoky Quartz Cocktail Ring", "category": "jewellery", "price": 480.00},
+        {"id": "j5", "itemId": "laypla750", "name": "Layered Platinum Herringbone Chain", "category": "jewellery", "price": 750.00},
+        {"id": "j6", "itemId": "diapav580", "name": "Diamond Pavé Orbit Ear Cuffs (Pair)", "category": "jewellery", "price": 580.00},
+        {"id": "j7", "itemId": "carobs390", "name": "Carved Obsidian Brooch with Gold Setting", "category": "jewellery", "price": 390.00},
+        {"id": "f1", "itemId": "satank560", "name": "Satin Ankle-Wrap Stiletto Sandals (Black)", "category": "footwear", "price": 560.00},
+        {"id": "f2", "itemId": "patlea490", "name": "Patent Leather Pointed Slingback Mules (Champagne)", "category": "footwear", "price": 490.00},
+        {"id": "f3", "itemId": "velpla530", "name": "Velvet Platform Block-Heel Pumps (Midnight Navy)", "category": "footwear", "price": 530.00},
+        {"id": "f4", "itemId": "emblea820", "name": "Embossed Leather Sculpted Heel Boots (Burgundy)", "category": "footwear", "price": 820.00},
+        {"id": "f5", "itemId": "minmet480", "name": "Minimalist Metallic Strappy Stiletto (Gold)", "category": "footwear", "price": 480.00}
+      ],
+      "assignments": {
+        "m1_1": {"clothingIds": ["c1", "c4"], "jewelleryIds": ["j1", "j3"], "footwearId": "f2"},
+        "m2_1": {"clothingIds": ["c3", "c5", "c4"], "jewelleryIds": ["j2", "j4"], "footwearId": "f1"},
+        "m3_1": {"clothingIds": ["c3", "c8", "c4"], "jewelleryIds": ["j5"], "footwearId": "f4"},
+        "m4_1": {"clothingIds": ["c5", "c7"], "jewelleryIds": ["j1", "j6", "j3"], "footwearId": "f1"},
+        "m5_1": {"clothingIds": ["c10", "c4"], "jewelleryIds": ["j3", "j7"], "footwearId": "f2"},
+        "m1_2": {"clothingIds": ["c3", "c5", "c7"], "jewelleryIds": ["j2", "j4"], "footwearId": "f1"},
+        "m2_2": {"clothingIds": ["c8", "c7"], "jewelleryIds": ["j6", "j3"], "footwearId": "f3"},
+        "m3_2": {"clothingIds": ["c1", "c4"], "jewelleryIds": ["j7"], "footwearId": "f4"},
+        "m4_2": {"clothingIds": ["c10", "c8", "c4"], "jewelleryIds": ["j1", "j2"], "footwearId": "f5"},
+        "m5_2": {"clothingIds": ["c3", "c4"], "jewelleryIds": ["j5", "j4"], "footwearId": "f1"},
+        "m1_3": {"clothingIds": ["c9"], "jewelleryIds": ["j1", "j2", "j4"], "footwearId": "f5"},
+        "m2_3": {"clothingIds": ["c9", "c6"], "jewelleryIds": ["j5", "j3"], "footwearId": "f3"},
+        "m3_3": {"clothingIds": ["c3", "c10", "c4"], "jewelleryIds": ["j7", "j4"], "footwearId": "f4"},
+        "m4_3": {"clothingIds": ["c2"], "jewelleryIds": ["j1", "j4", "j6"], "footwearId": "f5"},
+        "m5_3": {"clothingIds": ["c6", "c5", "c4"], "jewelleryIds": ["j2", "j3"], "footwearId": "f1"},
+        "m1_4": {"clothingIds": ["c2", "c6"], "jewelleryIds": ["j1", "j2", "j3", "j4"], "footwearId": "f5"},
+        "m2_4": {"clothingIds": ["c1", "c2"], "jewelleryIds": ["j5", "j6"], "footwearId": "f1"},
+        "m3_4": {"clothingIds": ["c6", "c3", "c4"], "jewelleryIds": ["j7", "j1"], "footwearId": "f4"},
+        "m4_4": {"clothingIds": ["c9", "c6"], "jewelleryIds": ["j2", "j4", "j6"], "footwearId": "f3"},
+        "m5_4": {"clothingIds": ["c2", "c6", "c10"], "jewelleryIds": ["j1", "j2", "j5"], "footwearId": "f5"}
+      }
+    },
+    {
+      "id": "show_2026_aw",
+      "name": "NOIR // Autumn/Winter 2026 Gala Presentation",
+      "season": "Autumn/Winter",
+      "year": 2026,
+      "date": "2026-10-24",
+      "venue": "Royal Horticultural Halls, Westminster, London",
+      "currency": "£",
+      "catwalkAppearances": 3,
+      "appearanceThemes": {
+        "1": "Heavy Wool Tailoring",
+        "2": "Leather & Cashmere",
+        "3": "Gala Evening Noir"
+      },
+      "models": [
+        {"id": "m1_aw", "firstName": "Freja", "walkOrder": 1, "notes": "Heavy wool look opener"},
+        {"id": "m2_aw", "firstName": "Aria", "walkOrder": 2, "notes": "Leather boots change"},
+        {"id": "m3_aw", "firstName": "Julian", "walkOrder": 3, "notes": "Structured coats"}
+      ],
+      "items": [
+        {"id": "c_aw1", "itemId": "casdou1650", "name": "Cashmere Double-Face Greatcoat", "category": "clothing", "price": 1650.00},
+        {"id": "c_aw2", "itemId": "leapan540", "name": "Leather Paneled Pencil Skirt", "category": "clothing", "price": 540.00},
+        {"id": "c_aw3", "itemId": "merrib310", "name": "Merino Ribbed Polo Jumper", "category": "clothing", "price": 310.00},
+        {"id": "j_aw1", "itemId": "brusil420", "name": "Brutalist Silver Torque Choker", "category": "jewellery", "price": 420.00},
+        {"id": "f_aw1", "itemId": "ovenap890", "name": "Over-The-Knee Nappa Boots", "category": "footwear", "price": 890.00}
+      ],
+      "assignments": {
+        "m1_aw_1": {"clothingIds": ["c_aw1", "c_aw3"], "jewelleryIds": ["j_aw1"], "footwearId": "f_aw1"},
+        "m2_aw_1": {"clothingIds": ["c_aw2", "c_aw3"], "jewelleryIds": ["j_aw1"], "footwearId": "f_aw1"},
+        "m3_aw_1": {"clothingIds": ["c_aw1"], "jewelleryIds": [], "footwearId": "f_aw1"}
+      }
+    }
+  ]
+}
