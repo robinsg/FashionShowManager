@@ -9,13 +9,13 @@ The goal of this integration is to enable fashion show organisers to seamlessly 
 
 ## Executive Summary
 
-Heidi Boutique currently utilizes Epos Now as its electronic point-of-sale (EPOS) platform for retail management and inventory tracking. The Fashion Show Manager requires a flexible mechanism to pull stock items from Epos Now to build the wardrobe catalogue for bi-annual runway events.
+Heidi Boutique currently uses Epos Now as its electronic point-of-sale (EPOS) platform for retail management and inventory tracking. The Fashion Show Manager requires a flexible mechanism to pull stock items from Epos Now to build the wardrobe catalogue for bi-annual runway events.
 
 ### Key Architectural Recommendations:
-1. **Authentication Method**: Utilize Epos Now REST API v4 using standard Basic Authentication (Base64-encoded `API Key:API Secret`) over HTTPS or OAuth 2.0 Bearer tokens for multi-tenant AppStore installations.
+1. **Authentication Method**: Use Epos Now REST API v4 using standard Basic Authorisation (Base64-encoded `API Key:API Secret`) over HTTPS or OAuth 2.0 Bearer tokens for multi-tenant AppStore installations.
 2. **Data Storage & Sync Strategy**: Implement a **Local Relational Snapshot with Manual & Background Sync** strategy inside the existing SQLite database (`fashion_show.db`).
    - *Why Snapshot?* Runway events require 100% offline resilience and zero dependency on venue internet stability or external API latency during fast-paced catwalk changes.
-   - *Synchronization*: Store the Epos Now Product ID (`eposNowProductId`) on imported items to allow on-demand retail price refreshes and stock availability checks.
+   - *Synchronisation*: Store the Epos Now Product ID (`eposNowProductId`) on imported items to allow on-demand retail price refreshes and stock availability checks.
 3. **Category Mapping Workflow**: Allow users to search and select Epos Now stock items via an interactive modal ("Import from Epos Now"), with **manual category assignment** (Clothing, Jewellery, Footwear) during selection, as POS categories often differ from runway styling categories.
 4. **Backend Security Proxy**: Route all Epos Now API calls through a server-side proxy endpoint in `server.js` (`/api/epos/...`) to prevent exposure of sensitive Epos Now API credentials to the client browser.
 
@@ -58,7 +58,7 @@ Epos Now supports two primary modes of authentication depending on how the appli
 For single-business private integrations, Epos Now provides an API Key and API Secret through the Epos Now Back Office portal (under *AppStore -> API Access*).
 
 #### Authentication Details:
-- **Header Name**: `Authorization`
+- **Header Name**: `Authorization` (Standard HTTP Header)
 - **Header Format**: `Basic <Base64_Encoded_Credentials>`
 - **Value Calculation**: `Base64(API_KEY:API_SECRET)`
 
@@ -73,11 +73,11 @@ Accept: application/json
 
 ### 2.2 OAuth 2.0 Bearer Token Authentication (For Epos Now AppStore Deployment)
 
-If the Fashion Show Manager is deployed as a public app or multi-location app in the Epos Now AppStore, OAuth 2.0 Authorization Code grant is required.
+If the Fashion Show Manager is deployed as a public app or multi-location app in the Epos Now AppStore, OAuth 2.0 Authorisation Code grant is required.
 
-1. **Authorization Code Request**: Direct user to `https://api.eposnowhq.com/oauth/authorize?client_id={CLIENT_ID}&response_type=code&redirect_uri={REDIRECT_URI}`.
+1. **Authorisation Code Request**: Direct user to `https://api.eposnowhq.com/oauth/authorize?client_id={CLIENT_ID}&response_type=code&redirect_uri={REDIRECT_URI}`.
 2. **Token Exchange**: Exchange the code for an Access Token via `POST https://api.eposnowhq.com/oauth/token`.
-3. **Bearer Authorization Header**:
+3. **Bearer Authorisation Header**:
    ```http
    Authorization: Bearer <ACCESS_TOKEN>
    ```
@@ -138,7 +138,7 @@ To ensure a smooth user experience that respects both existing manual entry and 
 
 ## 4. Data Architecture & Sync Strategy Analysis
 
-A key requirement is determining how data from Epos Now should be stored or synchronized with the Fashion Show Manager. We evaluated three architectural patterns:
+A key requirement is determining how data from Epos Now should be stored or synchronised with the Fashion Show Manager. We evaluated three architectural patterns:
 
 | Strategy | Architecture | Offline Resilience | Price & Stock Accuracy | Pros | Cons |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -267,7 +267,7 @@ To keep API keys secure, the Node.js server proxies requests to Epos Now:
 - Epos Now imposes standard API rate limits (typically **10 requests per second** per API key).
 - **Mitigation**:
   - Implement request debouncing (300ms) on frontend search inputs.
-  - For batch price syncing (`/sync-epos-prices`), bundle product IDs or fetch via paginated `/Product` endpoints rather than making individual requests per item.
+  - For batch price synchronisation (`/sync-epos-prices`), bundle product IDs or fetch via paginated `/Product` endpoints rather than making individual requests per item.
 
 ### 7.2 Connection Failures & Graceful Degradation
 - If Epos Now API is unreachable (e.g., venue offline or API service maintenance):
@@ -278,7 +278,7 @@ To keep API keys secure, the Node.js server proxies requests to Epos Now:
 
 ## 8. Step-by-Step Technical Implementation Roadmap
 
-Should implementation be authorized in future phases, the work can be executed in 4 logical stages:
+Should implementation be authorised in future phases, the work can be executed in 4 logical stages:
 
 ### Phase 1: Environment & Server Proxy (`server.js` & `db.js`)
 - Add Epos Now configuration parameters (`EPOS_NOW_API_KEY`, `EPOS_NOW_API_SECRET`).
@@ -292,7 +292,7 @@ Should implementation be authorized in future phases, the work can be executed i
 ### Phase 3: Wardrobe Catalogue Enhancement
 - Add **"🔄 Import from Epos Now"** and **"🔄 Sync Prices"** buttons to the Wardrobe Catalogue header.
 - Add Epos Now link indicators (`[EPOS]`) to item rows in the wardrobe table.
-- Implement price synchronization logic in `store.js`.
+- Implement price synchronisation logic in `store.js`.
 
 ### Phase 4: Integration Testing & Verification
 - Test manual vs Epos Now item co-existence.
